@@ -14,6 +14,11 @@ export class WelcomeScene extends Scene {
     private bgm: Sound | null = null;
     private audioPrompt: Text | null = null;
     private fireEmitter: Emitter | null = null;
+    private cgBoard: Container | null = null;
+    private cgShowContainer: Container | null = null;
+    private cgButtons: Button[] = [];
+    private cgPage: number = 0;
+    private readonly CG_PAGE_GUI_START_ID = 100;
 
     constructor(game: Game) {
         super(game);
@@ -31,26 +36,41 @@ export class WelcomeScene extends Scene {
     }
 
     private async createSceneElements(): Promise<void> {
+        await this.resourceManager.loadXML('media/loader/welcome.xml');
+        console.log("XML loaded, creating scene elements");
         await this.createBackground();
         await this.createLogo();
         await this.createButtons();
         await this.createBGM();
         this.createFireParticles();
         this.createAudioPrompt();
+        await this.createCGBoard();
     }
 
     private async createBackground(): Promise<void> {
         this.background = await this.resourceManager.createSprite('BG', 'Underpainting');
-        this.addChild(this.background as Container);
+        if (this.background) {
+            this.addChild(this.background as Container);
+        } else {
+            console.error("Failed to create background sprite");
+        }
 
         const topBackground = await this.resourceManager.createSprite('BG', 'Background');
-        this.addChild(topBackground as Container);
+        if (topBackground) {
+            this.addChild(topBackground as Container);
+        } else {
+            console.error("Failed to create top background sprite");
+        }
     }
 
     private async createLogo(): Promise<void> {
         this.logo = await this.resourceManager.createSprite('BG', 'Logo');
-        this.logo.position.set(5, 15);
-        this.addChild(this.logo);
+        if (this.logo) {
+            this.logo.position.set(5, 15);
+            this.addChild(this.logo);
+        } else {
+            console.error("Failed to create logo sprite");
+        }
     }
 
     private async createButtons(): Promise<void> {
@@ -142,6 +162,143 @@ export class WelcomeScene extends Scene {
         this.fireEmitter.emit = true;
     }
 
+    private async createCGBoard(): Promise<void> {
+        this.cgBoard = new Container();
+        this.cgBoard.visible = false;
+
+        const cgBoardBg = await this.resourceManager.createSprite('CGBoard', 'CGAlpha');
+        this.cgBoard.addChild(cgBoardBg);
+
+        const board = await this.resourceManager.createSprite('CGBoard', 'board');
+        board.position.set((800 - 548) / 2, (600 - 383) / 2);
+        this.cgBoard.addChild(board);
+
+        const title = await this.resourceManager.createSprite('CGBoard', 'title');
+        title.position.set((549 - 61) / 2, 10);
+        board.addChild(title);
+
+        const closeButton = new Button(
+            await this.resourceManager.createTexture('CGBoard', 'close0'),
+            await this.resourceManager.createTexture('CGBoard', 'close1'),
+            await this.resourceManager.createTexture('CGBoard', 'close2')
+        );
+        closeButton.setPosition(549 - 25, 6);
+        closeButton.on('pointerup', this.closeCGBoard.bind(this));
+        board.addChild(closeButton.getContainer());
+
+        const prevButton = new Button(
+            await this.resourceManager.createTexture('CGBoard', 'page0'),
+            await this.resourceManager.createTexture('CGBoard', 'page1'),
+            await this.resourceManager.createTexture('CGBoard', 'page2')
+        );
+        prevButton.setPosition(30, 40);
+        prevButton.on('pointerup', () => this.changeCGPage(-1));
+        board.addChild(prevButton.getContainer());
+
+        const nextButton = new Button(
+            await this.resourceManager.createTexture('CGBoard', 'page0'),
+            await this.resourceManager.createTexture('CGBoard', 'page1'),
+            await this.resourceManager.createTexture('CGBoard', 'page2')
+        );
+        nextButton.setPosition(549 - 30 - 104, 40);
+        nextButton.on('pointerup', () => this.changeCGPage(1));
+        board.addChild(nextButton.getContainer());
+
+        await this.createCGButtons(board);
+
+        this.cgShowContainer = new Container();
+        this.cgShowContainer.visible = false;
+        await this.createCGShowImages();
+
+        this.addChild(this.cgBoard);
+        this.addChild(this.cgShowContainer);
+    }
+
+    private async createCGButtons(board: Sprite): Promise<void> {
+        const startx = 15;
+        const starty = 80;
+        const cgCount = 19; // 根据实际CG数量调整
+
+        for (let i = 0; i < 2; i++) {
+            const page = new Container();
+            page.visible = i === 0;
+            board.addChild(page);
+
+            for (let j = 0; j < 12 && i * 12 + j < cgCount; j++) {
+                const row = Math.floor(j / 4);
+                const col = j % 4;
+                const x = startx + col * (10 + 122);
+                const y = starty + row * (5 + 92);
+
+                const id = i * 12 + j;
+                const button = new Button(
+                    await this.resourceManager.createTexture('CG', `btn${id}0`),
+                    await this.resourceManager.createTexture('CG', `btn${id}1`),
+                    await this.resourceManager.createTexture('CG', `btn${id}2`)
+                );
+                button.setPosition(x, y);
+                button.on('pointerup', () => this.showCG(id));
+                this.cgButtons.push(button);
+                page.addChild(button.getContainer());
+            }
+        }
+    }
+
+    private async createCGShowImages(): Promise<void> {
+        const cgCount = 19; // 根据实际CG数量调整
+        for (let i = 0; i < cgCount; i++) {
+            const cg = await this.resourceManager.createSprite('CG', `CG${i}`);
+            if (cg) {
+                cg.position.set((800 - 800) / 2, (600 - 480) / 2);
+                cg.visible = false;
+                this.cgShowContainer?.addChild(cg);
+            } else {
+                console.error(`Failed to create CG sprite: CG${i}`);
+            }
+        }
+    }
+
+    private showCGBoard(): void {
+        if (this.cgBoard) {
+            this.cgBoard.visible = true;
+        }
+    }
+
+    private closeCGBoard(): void {
+        if (this.cgBoard) {
+            this.cgBoard.visible = false;
+        }
+    }
+
+    private changeCGPage(direction: number): void {
+        const newPage = this.cgPage + direction;
+        if (newPage >= 0 && newPage < 2) {
+            this.cgPage = newPage;
+            this.updateCGPageVisibility();
+        }
+    }
+
+    private updateCGPageVisibility(): void {
+        if (this.cgBoard) {
+            const pages = this.cgBoard.children[1].children.filter(child => child instanceof Container) as Container[];
+            pages.forEach((page, index) => {
+                page.visible = index === this.cgPage;
+            });
+        }
+    }
+
+    private showCG(id: number): void {
+        if (this.cgShowContainer) {
+            this.cgShowContainer.visible = true;
+            this.cgShowContainer.children.forEach((cg, index) => {
+                cg.visible = index === id;
+            });
+        }
+        if (this.cgBoard) {
+            this.cgBoard.visible = false;
+        }
+    }
+
     private onButtonClick(buttonName: string): void {
         switch (buttonName) {
             case 'Start':
@@ -149,8 +306,7 @@ export class WelcomeScene extends Scene {
                 // 实现开始游戏逻辑
                 break;
             case 'CG':
-                console.log('Open CG gallery');
-                // 实现 CG 画廊逻辑
+                this.showCGBoard();
                 break;
             case 'Settings':
                 console.log('Open settings');
@@ -167,5 +323,6 @@ export class WelcomeScene extends Scene {
         if (this.fireEmitter) {
             this.fireEmitter.update(deltaTime * 0.001);
         }
+        // 可以在这里添加其他需要更新的逻辑
     }
 }
