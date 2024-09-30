@@ -5,6 +5,7 @@ import { Sound } from '@pixi/sound';
 import { ResourceManager } from './ResourceManager';
 import { Button } from './Button';
 import { Emitter, EmitterConfigV3, upgradeConfig } from '@barvynkoa/particle-emitter';
+import { TextButton } from './TextButton';
 
 export class WelcomeScene extends Scene {
     private resourceManager: ResourceManager;
@@ -192,21 +193,23 @@ export class WelcomeScene extends Scene {
         closeButton.on('pointerup', this.closeCGBoard.bind(this));
         board.addChild(closeButton.getContainer());
 
-        const prevButton = new Button(
+        const prevButton = new TextButton(
             await this.resourceManager.createTexture('CGBoard', 'page0'),
             await this.resourceManager.createTexture('CGBoard', 'page1'),
-            await this.resourceManager.createTexture('CGBoard', 'page2')
+            await this.resourceManager.createTexture('CGBoard', 'page2'),
+            '上一页',
+            30, 40, 12, 0xFFFFFF
         );
-        prevButton.setPosition(30, 40);
         prevButton.on('pointerup', () => this.changeCGPage(-1));
         board.addChild(prevButton.getContainer());
 
-        const nextButton = new Button(
+        const nextButton = new TextButton(
             await this.resourceManager.createTexture('CGBoard', 'page0'),
             await this.resourceManager.createTexture('CGBoard', 'page1'),
-            await this.resourceManager.createTexture('CGBoard', 'page2')
+            await this.resourceManager.createTexture('CGBoard', 'page2'),
+            '下一页',
+            549 - 30 - 104, 40, 12, 0xFFFFFF
         );
-        nextButton.setPosition(549 - 30 - 104, 40);
         nextButton.on('pointerup', () => this.changeCGPage(1));
         board.addChild(nextButton.getContainer());
 
