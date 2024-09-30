@@ -19,10 +19,12 @@ export class WelcomeScene extends Scene {
     private cgButtons: Button[] = [];
     private cgPage: number = 0;
     private readonly CG_PAGE_GUI_START_ID = 100;
+    private backgroundContainer: Container;
 
     constructor(game: Game) {
         super(game);
         this.resourceManager = new ResourceManager();
+        this.backgroundContainer = new Container();
         this.init();
     }
 
@@ -38,6 +40,10 @@ export class WelcomeScene extends Scene {
     private async createSceneElements(): Promise<void> {
         await this.resourceManager.loadXML('media/loader/welcome.xml');
         console.log("XML loaded, creating scene elements");
+        
+        this.backgroundContainer = new Container();
+        this.addChild(this.backgroundContainer);
+
         await this.createBackground();
         await this.createLogo();
         await this.createButtons();
@@ -50,14 +56,14 @@ export class WelcomeScene extends Scene {
     private async createBackground(): Promise<void> {
         this.background = await this.resourceManager.createSprite('BG', 'Underpainting');
         if (this.background) {
-            this.addChild(this.background as Container);
+            this.backgroundContainer.addChild(this.background as Container);
         } else {
             console.error("Failed to create background sprite");
         }
 
         const topBackground = await this.resourceManager.createSprite('BG', 'Background');
         if (topBackground) {
-            this.addChild(topBackground as Container);
+            this.backgroundContainer.addChild(topBackground as Container);
         } else {
             console.error("Failed to create top background sprite");
         }
@@ -67,7 +73,7 @@ export class WelcomeScene extends Scene {
         this.logo = await this.resourceManager.createSprite('BG', 'Logo');
         if (this.logo) {
             this.logo.position.set(5, 15);
-            this.addChild(this.logo);
+            this.backgroundContainer.addChild(this.logo);
         } else {
             console.error("Failed to create logo sprite");
         }
@@ -91,7 +97,7 @@ export class WelcomeScene extends Scene {
                 button.setPosition(50, data.y);
                 button.on('pointerup', () => this.onButtonClick(data.name));
                 this.buttons.push(button);
-                this.addChild(button.getContainer() as any);
+                this.backgroundContainer.addChild(button.getContainer() as any);
             } else {
                 console.error(`Failed to load textures for button: ${data.name}`);
             }
@@ -134,7 +140,7 @@ export class WelcomeScene extends Scene {
     private async createFireParticles(): Promise<void> {
         const particleContainer = new Container();
         particleContainer.position.set(510, 270);
-        this.addChild(particleContainer);
+        this.backgroundContainer.addChild(particleContainer);
 
         const particleTexture = await this.resourceManager.createTexture('Particle', 'Fire');
 
@@ -261,12 +267,14 @@ export class WelcomeScene extends Scene {
     private showCGBoard(): void {
         if (this.cgBoard) {
             this.cgBoard.visible = true;
+            this.backgroundContainer.eventMode = 'none';
         }
     }
 
     private closeCGBoard(): void {
         if (this.cgBoard) {
             this.cgBoard.visible = false;
+            this.backgroundContainer.eventMode = 'auto';
         }
     }
 
@@ -297,6 +305,16 @@ export class WelcomeScene extends Scene {
         if (this.cgBoard) {
             this.cgBoard.visible = false;
         }
+        this.backgroundContainer.eventMode = 'none';
+
+        // 添加一个点击事件监听器来关闭 CG 显示
+        const closeHandler = () => {
+            this.cgShowContainer.visible = false;
+            this.backgroundContainer.eventMode = 'auto';
+            this.cgShowContainer.off('pointerdown', closeHandler);
+        };
+        this.cgShowContainer.on('pointerdown', closeHandler);
+        this.cgShowContainer.eventMode = 'static';
     }
 
     private onButtonClick(buttonName: string): void {
