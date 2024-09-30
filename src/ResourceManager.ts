@@ -20,12 +20,18 @@ export class ResourceManager {
             for (let i = 0; i < informationNodes.length; i++) {
                 const type = informationNodes[i].getAttribute("type") || "";
                 const spriteNodes = informationNodes[i].getElementsByTagName("Sprite");
-                this.resources[type] = {};
+                if (!this.resources[type]) {
+                    this.resources[type] = {};
+                }
                 for (let j = 0; j < spriteNodes.length; j++) {
                     const name = spriteNodes[j].getAttribute("name") || "";
                     const path = spriteNodes[j].textContent || "";
-                    this.resources[type][name] = path;
-                    console.log(`Loaded resource: ${type}/${name} -> ${path}`);
+                    if (!this.resources[type][name]) {
+                        this.resources[type][name] = path;
+                        console.log(`Loaded resource: ${type}/${name} -> ${path}`);
+                    } else {
+                        console.warn(`Resource ${type}/${name} already exists, skipping.`);
+                    }
                 }
             }
 

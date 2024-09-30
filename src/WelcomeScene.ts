@@ -21,6 +21,7 @@ export class WelcomeScene extends Scene {
     private cgPage: number = 0;
     private readonly CG_PAGE_GUI_START_ID = 100;
     private backgroundContainer: Container;
+    private cgBlackBackground: Sprite | null = null;
 
     constructor(game: Game) {
         super(game);
@@ -39,8 +40,7 @@ export class WelcomeScene extends Scene {
     }
 
     private async createSceneElements(): Promise<void> {
-        await this.resourceManager.loadXML('media/loader/welcome.xml');
-        console.log("XML loaded, creating scene elements");
+        console.log("Creating scene elements");
         
         this.backgroundContainer = new Container();
         this.addChild(this.backgroundContainer);
@@ -174,7 +174,11 @@ export class WelcomeScene extends Scene {
         this.cgBoard.visible = false;
 
         const cgBoardBg = await this.resourceManager.createSprite('CGBoard', 'CGAlpha');
-        this.cgBoard.addChild(cgBoardBg);
+        if (cgBoardBg) {
+            this.cgBoard.addChild(cgBoardBg);
+        } else {
+            console.error("Failed to create CGAlpha background");
+        }
 
         const board = await this.resourceManager.createSprite('CGBoard', 'board');
         board.position.set((800 - 548) / 2, (600 - 383) / 2);
@@ -214,6 +218,14 @@ export class WelcomeScene extends Scene {
         board.addChild(nextButton.getContainer());
 
         await this.createCGButtons(board);
+
+        this.cgBlackBackground = await this.resourceManager.createSprite('CGBoard', 'Black');
+        if (this.cgBlackBackground) {
+            this.cgBlackBackground.visible = false;
+            this.addChild(this.cgBlackBackground);
+        } else {
+            console.error("Failed to create Black background for CG display");
+        }
 
         this.cgShowContainer = new Container();
         this.cgShowContainer.visible = false;
@@ -255,16 +267,31 @@ export class WelcomeScene extends Scene {
 
     private async createCGShowImages(): Promise<void> {
         const cgCount = 19; // 根据实际CG数量调整
+        this.cgShowContainer = new Container();
+        this.cgShowContainer.visible = false;
+        this.addChild(this.cgShowContainer);
+
         for (let i = 0; i < cgCount; i++) {
             const cg = await this.resourceManager.createSprite('CG', `CG${i}`);
             if (cg) {
-                cg.position.set((800 - 800) / 2, (600 - 480) / 2);
+                cg.position.set((800 - cg.width) / 2, (600 - cg.height) / 2);
                 cg.visible = false;
-                this.cgShowContainer?.addChild(cg);
+                this.cgShowContainer.addChild(cg);
+                console.log(`CG${i} loaded and added to container`); // 添加日志
             } else {
                 console.error(`Failed to create CG sprite: CG${i}`);
             }
         }
+
+        // 添加关闭按钮
+        const closeButton = new Button(
+            await this.resourceManager.createTexture('CGBoard', 'close0'),
+            await this.resourceManager.createTexture('CGBoard', 'close1'),
+            await this.resourceManager.createTexture('CGBoard', 'close2')
+        );
+        closeButton.setPosition(800 - 30, 10);
+        closeButton.on('pointerup', this.closeCGShow.bind(this));
+        this.cgShowContainer.addChild(closeButton.getContainer());
     }
 
     private showCGBoard(): void {
@@ -299,25 +326,29 @@ export class WelcomeScene extends Scene {
     }
 
     private showCG(id: number): void {
-        if (this.cgShowContainer) {
-            this.cgShowContainer.visible = true;
-            this.cgShowContainer.children.forEach((cg, index) => {
-                cg.visible = index === id;
-            });
-        }
-        if (this.cgBoard) {
-            this.cgBoard.visible = false;
-        }
-        this.backgroundContainer.eventMode = 'none';
+        if (this.cgShowContainer && this.cgBoard && this.cgBlackBackground) {
+            // 显示黑色背景
+            this.cgBlackBackground.visible = true;
 
-        // 添加一个点击事件监听器来关闭 CG 显示
-        const closeHandler = () => {
-            this.cgShowContainer.visible = false;
-            this.backgroundContainer.eventMode = 'auto';
-            this.cgShowContainer.off('pointerdown', closeHandler);
-        };
-        this.cgShowContainer.on('pointerdown', closeHandler);
-        this.cgShowContainer.eventMode = 'static';
+            // 显示CG展示容器
+            this.cgShowContainer.visible = true;
+            
+            // 隐藏CG画廊界面
+            this.cgBoard.visible = false;
+
+            // 显示选中的CG
+            this.cgShowContainer.children.forEach((child, index) => {
+                if (child instanceof Sprite) {
+                    const isVisible = index === id;
+                    child.visible = isVisible;
+                    console.log(`CG${index} visibility set to ${isVisible}`);
+                }
+            });
+        } else {
+            console.error('cgShowContainer, cgBoard, or cgBlackBackground is null');
+        }
+        
+        this.backgroundContainer.eventMode = 'none';
     }
 
     private onButtonClick(buttonName: string): void {
@@ -345,5 +376,18 @@ export class WelcomeScene extends Scene {
             this.fireEmitter.update(deltaTime * 0.001);
         }
         // 可以在这里添加其他需要更新的逻辑
+    }
+
+    private closeCGShow(): void {
+        if (this.cgShowContainer) {
+            this.cgShowContainer.visible = false;
+        }
+        if (this.cgBoard) {
+            this.cgBoard.visible = true;
+        }
+        if (this.cgBlackBackground) {
+            this.cgBlackBackground.visible = false;
+        }
+        this.backgroundContainer.eventMode = 'auto';
     }
 }
