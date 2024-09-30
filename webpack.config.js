@@ -9,6 +9,10 @@ module.exports = {
         use: 'ts-loader',
         exclude: /node_modules/,
       },
+      {
+        test: /\.json$/,
+        type: 'json'
+      }
     ],
   },
   resolve: {
@@ -19,9 +23,15 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
   },
   devServer: {
-    static: {
-      directory: path.join(__dirname, 'public'),
-    },
+    static: [
+      {
+        directory: path.join(__dirname, 'public'),
+      },
+      {
+        directory: path.join(__dirname, 'media'),
+        publicPath: '/media',
+      },
+    ],
     compress: true,
     port: 8080,
   },

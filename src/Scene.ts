@@ -1,13 +1,22 @@
-import * as PIXI from 'pixi.js';
+import { Container } from 'pixi.js';
 import { Game } from './Game';
 
-export abstract class Scene extends PIXI.Container {
+export abstract class Scene {
+    protected container: Container;
     protected game: Game;
 
     constructor(game: Game) {
-        super();
+        this.container = new Container();
         this.game = game;
     }
 
     public abstract update(deltaTime: number): void;
+
+    public getContainer(): Container {
+        return this.container;
+    }
+
+    protected addChild(child: Container): void {
+        this.container.addChild(child);
+    }
 }

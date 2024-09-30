@@ -150,5 +150,8 @@
         <Sprite name="NoCG1">media/CG/no_cg.jpg</Sprite>
         <Sprite name="NoCG2">media/CG/no_cg.jpg</Sprite>
     </SpriteInformation>
+    
+    <SpriteInformation type="Particle">
+        <Sprite name="Fire">media/particles/particles.png</Sprite>
+    </SpriteInformation>
 </Loader>
-
