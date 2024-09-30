@@ -22,6 +22,7 @@ export class WelcomeScene extends Scene {
     private readonly CG_PAGE_GUI_START_ID = 100;
     private backgroundContainer: Container;
     private cgBlackBackground: Sprite | null = null;
+    private cgPages: Container[] = []; // 添加这行来存储CG页面
 
     constructor(game: Game) {
         super(game);
@@ -244,6 +245,7 @@ export class WelcomeScene extends Scene {
             const page = new Container();
             page.visible = i === 0;
             board.addChild(page);
+            this.cgPages.push(page); // 将页面添加到数组中
 
             for (let j = 0; j < 12 && i * 12 + j < cgCount; j++) {
                 const row = Math.floor(j / 4);
@@ -310,19 +312,16 @@ export class WelcomeScene extends Scene {
 
     private changeCGPage(direction: number): void {
         const newPage = this.cgPage + direction;
-        if (newPage >= 0 && newPage < 2) {
+        if (newPage >= 0 && newPage < this.cgPages.length) {
             this.cgPage = newPage;
             this.updateCGPageVisibility();
         }
     }
 
     private updateCGPageVisibility(): void {
-        if (this.cgBoard) {
-            const pages = this.cgBoard.children[1].children.filter(child => child instanceof Container) as Container[];
-            pages.forEach((page, index) => {
-                page.visible = index === this.cgPage;
-            });
-        }
+        this.cgPages.forEach((page, index) => {
+            page.visible = index === this.cgPage;
+        });
     }
 
     private showCG(id: number): void {
