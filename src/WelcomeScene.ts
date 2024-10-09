@@ -31,6 +31,9 @@ export class WelcomeScene extends Scene {
     public async init(): Promise<void> {
         await this.createSceneElements();
         
+        // 确保背景容器不会阻止事件传播
+        this.backgroundContainer.eventMode = 'passive';
+        
         // 初始化自定义鼠标
         const customCursor = await CustomCursor.getInstance();
         this.addChild(customCursor);
@@ -108,14 +111,17 @@ export class WelcomeScene extends Scene {
             if (normalTexture && hoverTexture && pressedTexture) {
                 const button = new Button(normalTexture, hoverTexture, pressedTexture);
                 button.setPosition(50, data.y);
-                button.on('pointerup', () => this.onButtonClick(data.name));
+                button.on('buttonClicked', () => {
+                    console.log(`WelcomeScene: ${data.name} button clicked`);
+                    this.onButtonClick(data.name);
+                });
                 button.on('pointerover', async () => {
+                    console.log(`WelcomeScene: ${data.name} button pointerover`);
                     (await CustomCursor.getInstance()).setPointCursor();
-                    button.getContainer().cursor = 'none';
                 });
                 button.on('pointerout', async () => {
+                    console.log(`WelcomeScene: ${data.name} button pointerout`);
                     (await CustomCursor.getInstance()).setArrowCursor();
-                    button.getContainer().cursor = 'none';
                 });
                 this.buttons.push(button);
                 this.backgroundContainer.addChild(button.getContainer() as any);
@@ -190,6 +196,7 @@ export class WelcomeScene extends Scene {
     }
 
     private async createCGBoard(): Promise<void> {
+        console.log('Creating CG Board'); // 添加日志
         this.cgBoard = new Container();
         this.cgBoard.visible = false;
 
@@ -221,7 +228,7 @@ export class WelcomeScene extends Scene {
             await this.game.resourceManager.createTexture('CGBoard', 'page0'),
             await this.game.resourceManager.createTexture('CGBoard', 'page1'),
             await this.game.resourceManager.createTexture('CGBoard', 'page2'),
-            '上一页',
+            '上一',
             30, 40, 12, 0xFFFFFF
         );
         prevButton.on('pointerup', () => this.changeCGPage(-1));
@@ -253,12 +260,13 @@ export class WelcomeScene extends Scene {
 
         this.addChild(this.cgBoard);
         this.addChild(this.cgShowContainer);
+        console.log('CG Board created and added to scene'); // 添加日志
     }
 
     private async createCGButtons(board: Sprite): Promise<void> {
         const startx = 15;
         const starty = 80;
-        const cgCount = 19; // 根据实际CG数量调整
+        const cgCount = 19; // 根据实际CG量调整
 
         for (let i = 0; i < 2; i++) {
             const page = new Container();
@@ -316,9 +324,13 @@ export class WelcomeScene extends Scene {
     }
 
     private showCGBoard(): void {
+        console.log('showCGBoard called'); // 添加日志
         if (this.cgBoard) {
+            console.log('Setting cgBoard visible to true'); // 添加日志
             this.cgBoard.visible = true;
             this.backgroundContainer.eventMode = 'none';
+        } else {
+            console.error('cgBoard is null'); // 添加错误日志
         }
     }
 
@@ -354,7 +366,7 @@ export class WelcomeScene extends Scene {
             // 隐藏CG画廊界面
             this.cgBoard.visible = false;
 
-            // 显示选中的CG
+            // 显示选的CG
             this.cgShowContainer.children.forEach((child, index) => {
                 if (child instanceof Sprite) {
                     const isVisible = index === id;
@@ -370,12 +382,14 @@ export class WelcomeScene extends Scene {
     }
 
     private onButtonClick(buttonName: string): void {
+        console.log(`onButtonClick called with: ${buttonName}`); // 添加日志
         switch (buttonName) {
             case 'Start':
                 console.log('Start game');
                 // 实现开始游戏逻辑
                 break;
             case 'CG':
+                console.log('Show CG Board'); // 添加日志
                 this.showCGBoard();
                 break;
             case 'Settings':
@@ -393,7 +407,7 @@ export class WelcomeScene extends Scene {
         if (this.fireEmitter) {
             this.fireEmitter.update(deltaTime * 0.001);
         }
-        // 可以在这里添加其他需要更新的逻辑
+        // 以在这里添加其他需要更新的逻辑
     }
 
     private closeCGShow(): void {
