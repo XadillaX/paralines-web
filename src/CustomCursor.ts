@@ -49,11 +49,19 @@ export class CustomCursor extends Container {
         this.currentCursor.visible = false;
         this.currentCursor = this.arrowCursor;
         this.currentCursor.visible = true;
+        this.hideSystemCursor();
     }
 
     public setPointCursor(): void {
         this.currentCursor.visible = false;
         this.currentCursor = this.pointCursor;
         this.currentCursor.visible = true;
+        this.hideSystemCursor();
+    }
+
+    private hideSystemCursor(): void {
+        const game = Game.getInstance();
+        game.getApp().renderer.events.cursorStyles.default = 'none';
+        game.getApp().renderer.events.cursorStyles.pointer = 'none';
     }
 }

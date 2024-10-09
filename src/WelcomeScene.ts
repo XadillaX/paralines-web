@@ -42,6 +42,9 @@ export class WelcomeScene extends Scene {
         this.game.getApp().stage.on('pointermove', (event) => {
             customCursor.updatePosition(event);
         });
+
+        // 确保系统鼠标被隐藏
+        this.game.getApp().renderer.events.cursorStyles.default = 'none';
     }
 
     private async createSceneElements(): Promise<void> {
@@ -106,8 +109,14 @@ export class WelcomeScene extends Scene {
                 const button = new Button(normalTexture, hoverTexture, pressedTexture);
                 button.setPosition(50, data.y);
                 button.on('pointerup', () => this.onButtonClick(data.name));
-                button.on('pointerover', async () => (await CustomCursor.getInstance()).setPointCursor());
-                button.on('pointerout', async () => (await CustomCursor.getInstance()).setArrowCursor());
+                button.on('pointerover', async () => {
+                    (await CustomCursor.getInstance()).setPointCursor();
+                    button.getContainer().cursor = 'none';
+                });
+                button.on('pointerout', async () => {
+                    (await CustomCursor.getInstance()).setArrowCursor();
+                    button.getContainer().cursor = 'none';
+                });
                 this.buttons.push(button);
                 this.backgroundContainer.addChild(button.getContainer() as any);
             } else {
