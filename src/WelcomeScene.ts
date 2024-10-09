@@ -34,6 +34,7 @@ export class WelcomeScene extends Scene {
         // 初始化自定义鼠标
         const customCursor = await CustomCursor.getInstance();
         this.addChild(customCursor);
+        customCursor.setArrowCursor(); // 设置默认为箭头光标
         
         // 添加鼠标移动事件监听
         this.game.getApp().stage.on('pointermove', (event) => {
@@ -103,8 +104,8 @@ export class WelcomeScene extends Scene {
                 const button = new Button(normalTexture, hoverTexture, pressedTexture);
                 button.setPosition(50, data.y);
                 button.on('pointerup', () => this.onButtonClick(data.name));
-                button.on('pointerover', async () => (await CustomCursor.getInstance()).setButtonCursor());
-                button.on('pointerout', async () => (await CustomCursor.getInstance()).setDefaultCursor());
+                button.on('pointerover', async () => (await CustomCursor.getInstance()).setPointCursor());
+                button.on('pointerout', async () => (await CustomCursor.getInstance()).setArrowCursor());
                 this.buttons.push(button);
                 this.backgroundContainer.addChild(button.getContainer() as any);
             } else {

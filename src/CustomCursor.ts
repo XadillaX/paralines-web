@@ -1,20 +1,20 @@
-import { Sprite, Container, Texture } from 'pixi.js';
+import { Sprite, Container, Texture, Assets } from 'pixi.js';
 import { Game } from './Game';
 
 export class CustomCursor extends Container {
     private static instance: CustomCursor;
-    private defaultCursor: Sprite;
-    private buttonCursor: Sprite;
+    private arrowCursor: Sprite;
+    private pointCursor: Sprite;
     private currentCursor: Sprite;
 
     private constructor() {
         super();
-        this.defaultCursor = new Sprite();
-        this.buttonCursor = new Sprite();
-        this.addChild(this.defaultCursor);
-        this.addChild(this.buttonCursor);
-        this.currentCursor = this.defaultCursor;
-        this.buttonCursor.visible = false;
+        this.arrowCursor = new Sprite();
+        this.pointCursor = new Sprite();
+        this.addChild(this.arrowCursor);
+        this.addChild(this.pointCursor);
+        this.currentCursor = this.arrowCursor;
+        this.pointCursor.visible = false;
     }
 
     public static async getInstance(): Promise<CustomCursor> {
@@ -27,26 +27,29 @@ export class CustomCursor extends Container {
 
     private async loadTextures(): Promise<void> {
         const game = Game.getInstance();
-        const defaultTexture = await game.resourceManager.createTexture('Cursor', 'Pointer');
-        const buttonTexture = await game.resourceManager.createTexture('Cursor', 'Button');
         
-        if (defaultTexture) this.defaultCursor.texture = defaultTexture;
-        if (buttonTexture) this.buttonCursor.texture = buttonTexture;
+        // 直接加载箭头光标
+        const arrowTexture = await Assets.load('media/cursor_arrow.png');
+        this.arrowCursor.texture = arrowTexture;
+
+        // 从资源管理器加载指针光标
+        const pointTexture = await game.resourceManager.createTexture('Cursor', 'Pointer');
+        if (pointTexture) this.pointCursor.texture = pointTexture;
     }
 
     public updatePosition(x: number, y: number): void {
         this.position.set(x, y);
     }
 
-    public setDefaultCursor(): void {
+    public setArrowCursor(): void {
         this.currentCursor.visible = false;
-        this.currentCursor = this.defaultCursor;
+        this.currentCursor = this.arrowCursor;
         this.currentCursor.visible = true;
     }
 
-    public setButtonCursor(): void {
+    public setPointCursor(): void {
         this.currentCursor.visible = false;
-        this.currentCursor = this.buttonCursor;
+        this.currentCursor = this.pointCursor;
         this.currentCursor.visible = true;
     }
 }
