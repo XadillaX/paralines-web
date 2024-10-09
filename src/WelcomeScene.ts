@@ -37,8 +37,10 @@ export class WelcomeScene extends Scene {
         customCursor.setArrowCursor(); // 设置默认为箭头光标
         
         // 添加鼠标移动事件监听
+        this.game.getApp().stage.eventMode = 'static';
+        this.game.getApp().stage.hitArea = this.game.getApp().screen;
         this.game.getApp().stage.on('pointermove', (event) => {
-            customCursor.updatePosition(event.global.x, event.global.y);
+            customCursor.updatePosition(event);
         });
     }
 

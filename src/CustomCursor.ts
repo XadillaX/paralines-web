@@ -1,4 +1,4 @@
-import { Sprite, Container, Texture, Assets } from 'pixi.js';
+import { Sprite, Container, Texture, Assets, FederatedPointerEvent } from 'pixi.js';
 import { Game } from './Game';
 
 export class CustomCursor extends Container {
@@ -15,6 +15,10 @@ export class CustomCursor extends Container {
         this.addChild(this.pointCursor);
         this.currentCursor = this.arrowCursor;
         this.pointCursor.visible = false;
+
+        // 设置光标的锚点为左上角
+        this.arrowCursor.anchor.set(0, 0);
+        this.pointCursor.anchor.set(0, 0);
     }
 
     public static async getInstance(): Promise<CustomCursor> {
@@ -37,8 +41,8 @@ export class CustomCursor extends Container {
         if (pointTexture) this.pointCursor.texture = pointTexture;
     }
 
-    public updatePosition(x: number, y: number): void {
-        this.position.set(x, y);
+    public updatePosition(event: FederatedPointerEvent): void {
+        this.position.copyFrom(event.global);
     }
 
     public setArrowCursor(): void {
