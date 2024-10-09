@@ -2,13 +2,11 @@ import { Container, Sprite, Text, Assets, Texture, Rectangle } from 'pixi.js';
 import { Scene } from './Scene';
 import { Game } from './Game';
 import { Sound } from '@pixi/sound';
-import { ResourceManager } from './ResourceManager';
 import { Button } from './Button';
 import { Emitter, EmitterConfigV3, upgradeConfig } from '@barvynkoa/particle-emitter';
 import { TextButton } from './TextButton';
 
 export class WelcomeScene extends Scene {
-    private resourceManager: ResourceManager;
     private background: Sprite | null = null;
     private logo: Sprite | null = null;
     private buttons: Button[] = [];
@@ -22,22 +20,15 @@ export class WelcomeScene extends Scene {
     private readonly CG_PAGE_GUI_START_ID = 100;
     private backgroundContainer: Container;
     private cgBlackBackground: Sprite | null = null;
-    private cgPages: Container[] = []; // 添加这行来存储CG页面
+    private cgPages: Container[] = [];
 
-    constructor(game: Game) {
-        super(game);
-        this.resourceManager = new ResourceManager();
+    constructor() {
+        super();
         this.backgroundContainer = new Container();
-        this.init();
     }
 
-    private async init(): Promise<void> {
-        await this.loadResources();
+    public async init(): Promise<void> {
         await this.createSceneElements();
-    }
-
-    private async loadResources(): Promise<void> {
-        await this.resourceManager.loadXML('media/loader/welcome.xml');
     }
 
     private async createSceneElements(): Promise<void> {
@@ -53,26 +44,30 @@ export class WelcomeScene extends Scene {
         this.createFireParticles();
         this.createAudioPrompt();
         await this.createCGBoard();
+
+        console.log("Scene elements created");
     }
 
     private async createBackground(): Promise<void> {
-        this.background = await this.resourceManager.createSprite('BG', 'Underpainting');
+        this.background = await this.game.resourceManager.createSprite('BG', 'Underpainting');
         if (this.background) {
-            this.backgroundContainer.addChild(this.background as Container);
+            this.backgroundContainer.addChild(this.background);
+            console.log("Background added");
         } else {
             console.error("Failed to create background sprite");
         }
 
-        const topBackground = await this.resourceManager.createSprite('BG', 'Background');
+        const topBackground = await this.game.resourceManager.createSprite('BG', 'Background');
         if (topBackground) {
-            this.backgroundContainer.addChild(topBackground as Container);
+            this.backgroundContainer.addChild(topBackground);
+            console.log("Top background added");
         } else {
             console.error("Failed to create top background sprite");
         }
     }
 
     private async createLogo(): Promise<void> {
-        this.logo = await this.resourceManager.createSprite('BG', 'Logo');
+        this.logo = await this.game.resourceManager.createSprite('BG', 'Logo');
         if (this.logo) {
             this.logo.position.set(5, 15);
             this.backgroundContainer.addChild(this.logo);
@@ -90,9 +85,9 @@ export class WelcomeScene extends Scene {
         ];
 
         for (const data of buttonData) {
-            const normalTexture = await this.resourceManager.createTexture('GUI', `${data.name}0`);
-            const hoverTexture = await this.resourceManager.createTexture('GUI', `${data.name}1`);
-            const pressedTexture = await this.resourceManager.createTexture('GUI', `${data.name}2`);
+            const normalTexture = await this.game.resourceManager.createTexture('GUI', `${data.name}0`);
+            const hoverTexture = await this.game.resourceManager.createTexture('GUI', `${data.name}1`);
+            const pressedTexture = await this.game.resourceManager.createTexture('GUI', `${data.name}2`);
 
             if (normalTexture && hoverTexture && pressedTexture) {
                 const button = new Button(normalTexture, hoverTexture, pressedTexture);
@@ -107,7 +102,7 @@ export class WelcomeScene extends Scene {
     }
 
     private async createBGM(): Promise<void> {
-        this.bgm = await this.resourceManager.createSound('BGM', 'BGM');
+        this.bgm = await this.game.resourceManager.createSound('BGM', 'BGM');
         this.bgm.loop = true;
         const playResult = this.bgm.play();
         
@@ -144,7 +139,7 @@ export class WelcomeScene extends Scene {
         particleContainer.position.set(510, 270);
         this.backgroundContainer.addChild(particleContainer);
 
-        const particleTexture = await this.resourceManager.createTexture('Particle', 'Fire');
+        const particleTexture = await this.game.resourceManager.createTexture('Particle', 'Fire');
 
         // 计算单个粒子的尺寸
         const frameWidth = particleTexture.width / 4;
@@ -174,34 +169,34 @@ export class WelcomeScene extends Scene {
         this.cgBoard = new Container();
         this.cgBoard.visible = false;
 
-        const cgBoardBg = await this.resourceManager.createSprite('CGBoard', 'CGAlpha');
+        const cgBoardBg = await this.game.resourceManager.createSprite('CGBoard', 'CGAlpha');
         if (cgBoardBg) {
             this.cgBoard.addChild(cgBoardBg);
         } else {
             console.error("Failed to create CGAlpha background");
         }
 
-        const board = await this.resourceManager.createSprite('CGBoard', 'board');
+        const board = await this.game.resourceManager.createSprite('CGBoard', 'board');
         board.position.set((800 - 548) / 2, (600 - 383) / 2);
         this.cgBoard.addChild(board);
 
-        const title = await this.resourceManager.createSprite('CGBoard', 'title');
+        const title = await this.game.resourceManager.createSprite('CGBoard', 'title');
         title.position.set((549 - 61) / 2, 10);
         board.addChild(title);
 
         const closeButton = new Button(
-            await this.resourceManager.createTexture('CGBoard', 'close0'),
-            await this.resourceManager.createTexture('CGBoard', 'close1'),
-            await this.resourceManager.createTexture('CGBoard', 'close2')
+            await this.game.resourceManager.createTexture('CGBoard', 'close0'),
+            await this.game.resourceManager.createTexture('CGBoard', 'close1'),
+            await this.game.resourceManager.createTexture('CGBoard', 'close2')
         );
         closeButton.setPosition(549 - 25, 6);
         closeButton.on('pointerup', this.closeCGBoard.bind(this));
         board.addChild(closeButton.getContainer());
 
         const prevButton = new TextButton(
-            await this.resourceManager.createTexture('CGBoard', 'page0'),
-            await this.resourceManager.createTexture('CGBoard', 'page1'),
-            await this.resourceManager.createTexture('CGBoard', 'page2'),
+            await this.game.resourceManager.createTexture('CGBoard', 'page0'),
+            await this.game.resourceManager.createTexture('CGBoard', 'page1'),
+            await this.game.resourceManager.createTexture('CGBoard', 'page2'),
             '上一页',
             30, 40, 12, 0xFFFFFF
         );
@@ -209,9 +204,9 @@ export class WelcomeScene extends Scene {
         board.addChild(prevButton.getContainer());
 
         const nextButton = new TextButton(
-            await this.resourceManager.createTexture('CGBoard', 'page0'),
-            await this.resourceManager.createTexture('CGBoard', 'page1'),
-            await this.resourceManager.createTexture('CGBoard', 'page2'),
+            await this.game.resourceManager.createTexture('CGBoard', 'page0'),
+            await this.game.resourceManager.createTexture('CGBoard', 'page1'),
+            await this.game.resourceManager.createTexture('CGBoard', 'page2'),
             '下一页',
             549 - 30 - 104, 40, 12, 0xFFFFFF
         );
@@ -220,7 +215,7 @@ export class WelcomeScene extends Scene {
 
         await this.createCGButtons(board);
 
-        this.cgBlackBackground = await this.resourceManager.createSprite('CGBoard', 'Black');
+        this.cgBlackBackground = await this.game.resourceManager.createSprite('CGBoard', 'Black');
         if (this.cgBlackBackground) {
             this.cgBlackBackground.visible = false;
             this.addChild(this.cgBlackBackground);
@@ -255,9 +250,9 @@ export class WelcomeScene extends Scene {
 
                 const id = i * 12 + j;
                 const button = new Button(
-                    await this.resourceManager.createTexture('CG', `btn${id}0`),
-                    await this.resourceManager.createTexture('CG', `btn${id}1`),
-                    await this.resourceManager.createTexture('CG', `btn${id}2`)
+                    await this.game.resourceManager.createTexture('CG', `btn${id}0`),
+                    await this.game.resourceManager.createTexture('CG', `btn${id}1`),
+                    await this.game.resourceManager.createTexture('CG', `btn${id}2`)
                 );
                 button.setPosition(x, y);
                 button.on('pointerup', () => this.showCG(id));
@@ -274,7 +269,7 @@ export class WelcomeScene extends Scene {
         this.addChild(this.cgShowContainer);
 
         for (let i = 0; i < cgCount; i++) {
-            const cg = await this.resourceManager.createSprite('CG', `CG${i}`);
+            const cg = await this.game.resourceManager.createSprite('CG', `CG${i}`);
             if (cg) {
                 cg.position.set((800 - cg.width) / 2, (600 - cg.height) / 2);
                 cg.visible = false;
@@ -287,9 +282,9 @@ export class WelcomeScene extends Scene {
 
         // 添加关闭按钮
         const closeButton = new Button(
-            await this.resourceManager.createTexture('CGBoard', 'close0'),
-            await this.resourceManager.createTexture('CGBoard', 'close1'),
-            await this.resourceManager.createTexture('CGBoard', 'close2')
+            await this.game.resourceManager.createTexture('CGBoard', 'close0'),
+            await this.game.resourceManager.createTexture('CGBoard', 'close1'),
+            await this.game.resourceManager.createTexture('CGBoard', 'close2')
         );
         closeButton.setPosition(800 - 30, 10);
         closeButton.on('pointerup', this.closeCGShow.bind(this));

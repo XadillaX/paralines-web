@@ -5,12 +5,13 @@ export abstract class Scene {
     protected container: Container;
     protected game: Game;
 
-    constructor(game: Game) {
+    constructor() {
         this.container = new Container();
-        this.game = game;
+        this.game = Game.getInstance();
     }
 
     public abstract update(deltaTime: number): void;
+    public abstract init(): Promise<void>;
 
     public getContainer(): Container {
         return this.container;

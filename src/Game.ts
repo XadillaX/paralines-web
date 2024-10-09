@@ -1,27 +1,38 @@
-import { Application, Ticker, Container } from 'pixi.js';
+import { Application, Ticker } from 'pixi.js';
 import { Scene } from './Scene';
 import { WelcomeScene } from './WelcomeScene';
+import { ResourceManager } from './ResourceManager';
 
 export class Game {
+    private static instance: Game;
     private app: Application;
     private currentScene: Scene | null = null;
+    public readonly resourceManager: ResourceManager;
 
-    constructor() {
+    private constructor() {
         this.app = new Application({
             width: 800,
             height: 600,
             backgroundColor: 0x000000,
             antialias: true
         });
+        this.resourceManager = new ResourceManager();
+    }
+
+    public static getInstance(): Game {
+        if (!Game.instance) {
+            Game.instance = new Game();
+        }
+        return Game.instance;
     }
 
     public async start(): Promise<void> {
         await this.app.init();
+        await this.resourceManager.loadXML('media/loader/welcome.xml');
         
         document.body.appendChild(this.app.canvas);
-        this.setScene(new WelcomeScene(this));
+        this.setScene(new WelcomeScene());
         
-        // 设置游戏循环
         this.app.ticker.add(this.update);
     }
 
@@ -32,11 +43,12 @@ export class Game {
         }
     }
 
-    public setScene(scene: Scene): void {
+    public async setScene(scene: Scene): Promise<void> {
         if (this.currentScene) {
             this.app.stage.removeChild(this.currentScene.getContainer());
         }
         this.currentScene = scene;
+        await this.currentScene.init();
         this.app.stage.addChild(scene.getContainer());
     }
 

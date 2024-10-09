@@ -9,13 +9,11 @@ export class Button {
     constructor(normalTexture: Texture, hoverTexture: Texture, pressedTexture: Texture) {
         this.container = new Container();
 
-        this.normalState = Sprite.from(normalTexture);
-        this.hoverState = Sprite.from(hoverTexture);
-        this.pressedState = Sprite.from(pressedTexture);
+        this.normalState = new Sprite(normalTexture);
+        this.hoverState = new Sprite(hoverTexture);
+        this.pressedState = new Sprite(pressedTexture);
 
-        this.container.addChild(this.normalState);
-        this.container.addChild(this.hoverState);
-        this.container.addChild(this.pressedState);
+        this.container.addChild(this.normalState, this.hoverState, this.pressedState);
 
         this.hoverState.visible = false;
         this.pressedState.visible = false;

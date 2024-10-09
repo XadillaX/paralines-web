@@ -13,43 +13,37 @@ export class ResourceManager {
     public async loadXML(xmlPath: string): Promise<void> {
         try {
             const xmlText = await Assets.load(xmlPath);
+            console.log("XML loaded:", xmlText);
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlText, "text/xml");
 
-            const informationNodes = xmlDoc.getElementsByTagName("SpriteInformation");
-            for (let i = 0; i < informationNodes.length; i++) {
-                const type = informationNodes[i].getAttribute("type") || "";
-                const spriteNodes = informationNodes[i].getElementsByTagName("Sprite");
-                if (!this.resources[type]) {
-                    this.resources[type] = {};
-                }
-                for (let j = 0; j < spriteNodes.length; j++) {
-                    const name = spriteNodes[j].getAttribute("name") || "";
-                    const path = spriteNodes[j].textContent || "";
-                    if (!this.resources[type][name]) {
-                        this.resources[type][name] = path;
-                        console.log(`Loaded resource: ${type}/${name} -> ${path}`);
-                    } else {
-                        console.warn(`Resource ${type}/${name} already exists, skipping.`);
-                    }
-                }
-            }
-
-            const soundNodes = xmlDoc.getElementsByTagName("SoundInformation");
-            for (let i = 0; i < soundNodes.length; i++) {
-                const type = soundNodes[i].getAttribute("type") || "";
-                const soundElements = soundNodes[i].getElementsByTagName("Sound");
-                this.resources[type] = {};
-                for (let j = 0; j < soundElements.length; j++) {
-                    const name = soundElements[j].getAttribute("name") || "";
-                    const path = soundElements[j].textContent || "";
-                    this.resources[type][name] = path;
-                }
-            }
+            this.parseInformationNodes(xmlDoc, "SpriteInformation");
+            this.parseInformationNodes(xmlDoc, "SoundInformation");
 
             console.log("All resources loaded:", this.resources);
         } catch (error) {
             console.error("Error loading XML:", error);
+        }
+    }
+
+    private parseInformationNodes(xmlDoc: Document, nodeName: string): void {
+        const nodes = xmlDoc.getElementsByTagName(nodeName);
+        for (let i = 0; i < nodes.length; i++) {
+            const type = nodes[i].getAttribute("type") || "";
+            const elements = nodes[i].children;
+            if (!this.resources[type]) {
+                this.resources[type] = {};
+            }
+            for (let j = 0; j < elements.length; j++) {
+                const name = elements[j].getAttribute("name") || "";
+                const path = elements[j].textContent || "";
+                if (!this.resources[type][name]) {
+                    this.resources[type][name] = path;
+                    console.log(`Loaded resource: ${type}/${name} -> ${path}`);
+                } else {
+                    console.warn(`Resource ${type}/${name} already exists, skipping.`);
+                }
+            }
         }
     }
 
