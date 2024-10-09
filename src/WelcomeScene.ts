@@ -5,6 +5,7 @@ import { Sound } from '@pixi/sound';
 import { Button } from './Button';
 import { Emitter, EmitterConfigV3, upgradeConfig } from '@barvynkoa/particle-emitter';
 import { TextButton } from './TextButton';
+import { CustomCursor } from './CustomCursor';
 
 export class WelcomeScene extends Scene {
     private background: Sprite | null = null;
@@ -29,6 +30,15 @@ export class WelcomeScene extends Scene {
 
     public async init(): Promise<void> {
         await this.createSceneElements();
+        
+        // 初始化自定义鼠标
+        const customCursor = await CustomCursor.getInstance();
+        this.addChild(customCursor);
+        
+        // 添加鼠标移动事件监听
+        this.game.getApp().stage.on('pointermove', (event) => {
+            customCursor.updatePosition(event.global.x, event.global.y);
+        });
     }
 
     private async createSceneElements(): Promise<void> {
@@ -93,6 +103,8 @@ export class WelcomeScene extends Scene {
                 const button = new Button(normalTexture, hoverTexture, pressedTexture);
                 button.setPosition(50, data.y);
                 button.on('pointerup', () => this.onButtonClick(data.name));
+                button.on('pointerover', async () => (await CustomCursor.getInstance()).setButtonCursor());
+                button.on('pointerout', async () => (await CustomCursor.getInstance()).setDefaultCursor());
                 this.buttons.push(button);
                 this.backgroundContainer.addChild(button.getContainer() as any);
             } else {

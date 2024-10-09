@@ -33,6 +33,9 @@ export class Game {
         document.body.appendChild(this.app.canvas);
         this.setScene(new WelcomeScene());
         
+        // 隐藏系统鼠标
+        this.app.renderer.events.cursorStyles.default = 'none';
+        
         this.app.ticker.add(this.update);
     }
 
