@@ -25,15 +25,24 @@ export class WelcomeScene extends Scene {
     private cgPages: Container[] = [];
 
     constructor() {
-        super();
+        super('media/loader/welcome.xml');
         this.backgroundContainer = new Container();
     }
 
     public async init(): Promise<void> {
+        // 重置 BGM
+        this.bgm = null;
+
         await this.createSceneElements();
         
-        // Ensure the background container doesn't block event propagation
+        // 确保背景容器不会阻止事件传播
         this.backgroundContainer.eventMode = 'passive';
+
+        // 初始化自定义光标
+        await this.game.initializeCustomCursor();
+
+        // 创建并播放 BGM
+        await this.createBGM();
     }
 
     private async createSceneElements(): Promise<void> {
@@ -111,17 +120,21 @@ export class WelcomeScene extends Scene {
 
     private async createBGM(): Promise<void> {
         this.bgm = await this.game.resourceManager.createSound('BGM', 'BGM');
-        this.bgm.loop = true;
-        const playResult = this.bgm.play();
-        
-        if (playResult === undefined) {
-            console.log("音频自动播放被阻止。请点击页面任意位置来开始播放音乐。");
-            document.addEventListener('click', () => {
-                this.bgm?.play();
+        if (this.bgm) {
+            this.bgm.loop = true;
+            const playResult = this.bgm.play();
+            
+            if (playResult === undefined) {
+                console.log("音频自动播放被阻止。请点击页面任意位置来开始播放音乐。");
+                document.addEventListener('click', () => {
+                    this.bgm?.play();
+                    this.removeAudioPrompt();
+                }, { once: true });
+            } else {
                 this.removeAudioPrompt();
-            }, { once: true });
+            }
         } else {
-            this.removeAudioPrompt();
+            console.error("Failed to create BGM");
         }
     }
 
@@ -187,46 +200,54 @@ export class WelcomeScene extends Scene {
         }
 
         const board = await this.game.resourceManager.createSprite('CGBoard', 'board');
-        board.position.set((800 - 548) / 2, (600 - 383) / 2);
-        this.cgBoard.addChild(board);
+        if (board) {
+            board.position.set((800 - board.width) / 2, (600 - board.height) / 2);
+            this.cgBoard.addChild(board);
 
-        const title = await this.game.resourceManager.createSprite('CGBoard', 'title');
-        title.position.set((549 - 61) / 2, 10);
-        board.addChild(title);
+            const title = await this.game.resourceManager.createSprite('CGBoard', 'title');
+            if (title) {
+                title.position.set((board.width - title.width) / 2, 10);
+                board.addChild(title);
+            } else {
+                console.error("Failed to create title sprite");
+            }
 
-        const closeButton = new Button(
-            await this.game.resourceManager.createTexture('CGBoard', 'close0'),
-            await this.game.resourceManager.createTexture('CGBoard', 'close1'),
-            await this.game.resourceManager.createTexture('CGBoard', 'close2'),
-            'Close CG Board'
-        );
-        closeButton.setPosition(549 - 25, 6);
-        closeButton.on('pointerup', this.closeCGBoard.bind(this));
-        board.addChild(closeButton.getContainer());
+            const closeButton = new Button(
+                await this.game.resourceManager.createTexture('CGBoard', 'close0'),
+                await this.game.resourceManager.createTexture('CGBoard', 'close1'),
+                await this.game.resourceManager.createTexture('CGBoard', 'close2'),
+                'Close CG Board'
+            );
+            closeButton.setPosition(board.width - 25, 6);
+            closeButton.on('pointerup', this.closeCGBoard.bind(this));
+            board.addChild(closeButton.getContainer());
 
-        const prevButton = new TextButton(
-            await this.game.resourceManager.createTexture('CGBoard', 'page0'),
-            await this.game.resourceManager.createTexture('CGBoard', 'page1'),
-            await this.game.resourceManager.createTexture('CGBoard', 'page2'),
-            '上一页',
-            30, 40, 12, 0xFFFFFF,
-            'Previous Page'
-        );
-        prevButton.on('pointerup', () => this.changeCGPage(-1));
-        board.addChild(prevButton.getContainer());
+            const prevButton = new TextButton(
+                await this.game.resourceManager.createTexture('CGBoard', 'page0'),
+                await this.game.resourceManager.createTexture('CGBoard', 'page1'),
+                await this.game.resourceManager.createTexture('CGBoard', 'page2'),
+                '上一页',
+                30, 40, 12, 0xFFFFFF,
+                'Previous Page'
+            );
+            prevButton.on('pointerup', () => this.changeCGPage(-1));
+            board.addChild(prevButton.getContainer());
 
-        const nextButton = new TextButton(
-            await this.game.resourceManager.createTexture('CGBoard', 'page0'),
-            await this.game.resourceManager.createTexture('CGBoard', 'page1'),
-            await this.game.resourceManager.createTexture('CGBoard', 'page2'),
-            '下一页',
-            549 - 30 - 104, 40, 12, 0xFFFFFF,
-            'Next Page'
-        );
-        nextButton.on('pointerup', () => this.changeCGPage(1));
-        board.addChild(nextButton.getContainer());
+            const nextButton = new TextButton(
+                await this.game.resourceManager.createTexture('CGBoard', 'page0'),
+                await this.game.resourceManager.createTexture('CGBoard', 'page1'),
+                await this.game.resourceManager.createTexture('CGBoard', 'page2'),
+                '下一���',
+                board.width - 30 - 104, 40, 12, 0xFFFFFF,
+                'Next Page'
+            );
+            nextButton.on('pointerup', () => this.changeCGPage(1));
+            board.addChild(nextButton.getContainer());
 
-        await this.createCGButtons(board);
+            await this.createCGButtons(board);
+        } else {
+            console.error("Failed to create board sprite");
+        }
 
         this.cgBlackBackground = await this.game.resourceManager.createSprite('CGBoard', 'Black');
         if (this.cgBlackBackground) {
@@ -240,7 +261,9 @@ export class WelcomeScene extends Scene {
         this.cgShowContainer.visible = false;
         await this.createCGShowImages();
 
-        this.addChild(this.cgBoard);
+        if (this.cgBoard) {
+            this.addChild(this.cgBoard);
+        }
         this.addChild(this.cgShowContainer);
         console.log('CG Board created and added to scene');
     }
@@ -301,7 +324,7 @@ export class WelcomeScene extends Scene {
             await this.game.resourceManager.createTexture('CGBoard', 'close0'),
             await this.game.resourceManager.createTexture('CGBoard', 'close1'),
             await this.game.resourceManager.createTexture('CGBoard', 'close2'),
-            'Close CG Show Button'  // 添加按钮名称
+            'Close CG Show Button'
         );
         closeButton.setPosition(800 - 30, 10);
         closeButton.on('pointerup', this.closeCGShow.bind(this));
@@ -409,7 +432,6 @@ export class WelcomeScene extends Scene {
         // Remove audio prompt (if it still exists)
         this.removeAudioPrompt();
 
-        // Switch to LoginScene
         const loginScene = new LoginScene();
         this.game.setScene(loginScene);
     }

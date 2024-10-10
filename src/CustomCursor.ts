@@ -16,11 +16,11 @@ export class CustomCursor extends Container {
         this.currentCursor = this.arrowCursor;
         this.pointCursor.visible = false;
 
-        // Set cursor anchor to top-left corner
+        // 设置光标锚点为左上角
         this.arrowCursor.anchor.set(0, 0);
         this.pointCursor.anchor.set(0, 0);
 
-        // Set mouse cursor to not receive interaction events
+        // 设置鼠标光标不接收交互事件
         this.eventMode = 'none';
         this.arrowCursor.eventMode = 'none';
         this.pointCursor.eventMode = 'none';
@@ -29,19 +29,18 @@ export class CustomCursor extends Container {
     public static async getInstance(): Promise<CustomCursor> {
         if (!CustomCursor.instance) {
             CustomCursor.instance = new CustomCursor();
-            await CustomCursor.instance.loadTextures();
         }
         return CustomCursor.instance;
     }
 
-    private async loadTextures(): Promise<void> {
+    public async loadTextures(): Promise<void> {
         const game = Game.getInstance();
         
-        // Load arrow cursor directly
+        // 直接加载箭头光标
         const arrowTexture = await Assets.load('media/cursor_arrow.png');
         this.arrowCursor.texture = arrowTexture;
 
-        // Load pointer cursor from resource manager
+        // 从资源管理器加载指针光标
         const pointTexture = await game.resourceManager.createTexture('Cursor', 'Pointer');
         if (pointTexture) this.pointCursor.texture = pointTexture;
     }

@@ -14,10 +14,10 @@ export class LoginScene extends Scene {
 
     private gui: Container;
     private stageButtons: Button[] = [];
-    private backButton: Button; // 改为 Button 类型
+    private backButton: Button;
 
     constructor() {
-        super();
+        super('media/loader/login.xml');
         this.gui = new Container();
         this.addChild(this.gui);
         console.log('LoginScene constructor called, GUI container created and added to scene');
@@ -27,6 +27,11 @@ export class LoginScene extends Scene {
         console.log('LoginScene init started');
         this.game.resourceManager.setCurrentSet('media/loader/login.xml');
         await this.createSceneElements();
+        
+        // 确保鼠标光标为箭头状态
+        const customCursor = await CustomCursor.getInstance();
+        customCursor.setArrowCursor();
+
         console.log('LoginScene init completed');
         console.log('GUI container children count:', this.gui.children.length);
         console.log('Scene container children count:', this.container.children.length);

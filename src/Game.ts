@@ -35,18 +35,19 @@ export class Game {
 
     public async start(): Promise<void> {
         await this.app.init();
+        
+        // 加载所有需要的 XML 文件
         await this.resourceManager.loadXML('media/loader/welcome.xml');
         await this.resourceManager.loadXML('media/loader/login.xml');
-        this.resourceManager.setCurrentSet('media/loader/welcome.xml');
+        // 如果还有其他 XML 文件，也在这里加载
         
         document.body.appendChild(this.app.canvas);
 
-        // Initialize custom cursor
+        // 初始化自定义光标，但不立即加载
         this.customCursor = await CustomCursor.getInstance();
         this.app.stage.addChild(this.customCursor);
-        this.customCursor.setArrowCursor();
 
-        // Add mouse move event listener
+        // 添加鼠标移动事件监听器
         this.app.stage.eventMode = 'static';
         this.app.stage.hitArea = this.app.screen;
         this.app.stage.on('pointermove', (event) => {
@@ -55,7 +56,7 @@ export class Game {
             }
         });
 
-        // Hide system cursor
+        // 隐藏系统光标
         this.app.renderer.events.cursorStyles.default = 'none';
         
         this.setScene(new WelcomeScene());
@@ -81,10 +82,9 @@ export class Game {
         console.log('New scene added to stage');
         console.log('Stage children count:', this.app.stage.children.length);
 
-        // Ensure custom cursor is always on top
+        // 确保自定义光标始终在最上层，并重置为箭头状态
         if (this.customCursor) {
             this.app.stage.addChild(this.customCursor);
-            // Reset mouse pointer to arrow state
             this.customCursor.setArrowCursor();
         }
     }
@@ -103,5 +103,12 @@ export class Game {
 
     public getCustomCursor(): CustomCursor | null {
         return this.customCursor;
+    }
+
+    public async initializeCustomCursor(): Promise<void> {
+        if (this.customCursor) {
+            await this.customCursor.loadTextures();
+            this.customCursor.setArrowCursor();
+        }
     }
 }

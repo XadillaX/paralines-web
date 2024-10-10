@@ -5,9 +5,10 @@ export abstract class Scene {
     protected container: Container;
     protected game: Game;
 
-    constructor() {
+    constructor(xmlPath: string) {
         this.container = new Container();
         this.game = Game.getInstance();
+        this.game.resourceManager.setCurrentSet(xmlPath);
     }
 
     public abstract update(deltaTime: number): void;
@@ -21,7 +22,6 @@ export abstract class Scene {
         this.container.addChild(child);
     }
 
-    // 添加这个方法
     protected removeChild(child: Container): void {
         this.container.removeChild(child);
     }
