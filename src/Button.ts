@@ -1,4 +1,4 @@
-import { Container, Sprite, Texture, FederatedPointerEvent } from 'pixi.js';
+import { Container, Sprite, Texture, FederatedPointerEvent, Graphics } from 'pixi.js';
 import { CustomCursor } from './CustomCursor';
 
 export class Button {
@@ -6,9 +6,10 @@ export class Button {
     private normalState: Sprite;
     private hoverState: Sprite;
     private pressedState: Sprite;
+    private hoverOverlay: Graphics;
     private isPressed: boolean = false;
 
-    constructor(normalTexture: Texture, hoverTexture: Texture, pressedTexture: Texture) {
+    constructor(normalTexture: Texture, hoverTexture: Texture, pressedTexture: Texture, useHoverOverlay: boolean = false) {
         this.container = new Container();
 
         this.normalState = new Sprite(normalTexture);
@@ -19,6 +20,15 @@ export class Button {
 
         this.hoverState.visible = false;
         this.pressedState.visible = false;
+
+        if (useHoverOverlay) {
+            this.hoverOverlay = new Graphics();
+            this.hoverOverlay.beginFill(0x808080, 0.5);
+            this.hoverOverlay.drawRect(0, 0, this.normalState.width, this.normalState.height);
+            this.hoverOverlay.endFill();
+            this.hoverOverlay.visible = false;
+            this.container.addChild(this.hoverOverlay);
+        }
 
         this.container.eventMode = 'static';
         this.container.cursor = 'pointer';
@@ -35,6 +45,9 @@ export class Button {
         if (!this.isPressed) {
             this.normalState.visible = false;
             this.hoverState.visible = true;
+            if (this.hoverOverlay) {
+                this.hoverOverlay.visible = true;
+            }
         }
         (await CustomCursor.getInstance()).setPointCursor();
     }
@@ -45,6 +58,9 @@ export class Button {
             this.normalState.visible = true;
             this.hoverState.visible = false;
             this.pressedState.visible = false;
+            if (this.hoverOverlay) {
+                this.hoverOverlay.visible = false;
+            }
         }
         (await CustomCursor.getInstance()).setArrowCursor();
     }

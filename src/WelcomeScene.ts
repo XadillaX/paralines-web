@@ -263,13 +263,13 @@ export class WelcomeScene extends Scene {
     private async createCGButtons(board: Sprite): Promise<void> {
         const startx = 15;
         const starty = 80;
-        const cgCount = 19; // Adjust according to actual CG quantity
+        const cgCount = 19; // 根据实际CG数量调整
 
         for (let i = 0; i < 2; i++) {
             const page = new Container();
             page.visible = i === 0;
             board.addChild(page);
-            this.cgPages.push(page); // Add page to array
+            this.cgPages.push(page);
 
             for (let j = 0; j < 12 && i * 12 + j < cgCount; j++) {
                 const row = Math.floor(j / 4);
@@ -281,7 +281,8 @@ export class WelcomeScene extends Scene {
                 const button = new Button(
                     await this.game.resourceManager.createTexture('CG', `btn${id}0`),
                     await this.game.resourceManager.createTexture('CG', `btn${id}1`),
-                    await this.game.resourceManager.createTexture('CG', `btn${id}2`)
+                    await this.game.resourceManager.createTexture('CG', `btn${id}2`),
+                    true // 使用悬停遮罩效果
                 );
                 button.setPosition(x, y);
                 button.on('pointerup', () => this.showCG(id));
