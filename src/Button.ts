@@ -8,9 +8,11 @@ export class Button {
     private pressedState: Sprite;
     private hoverOverlay: Graphics;
     private isPressed: boolean = false;
+    private name: string;
 
-    constructor(normalTexture: Texture, hoverTexture: Texture, pressedTexture: Texture, useHoverOverlay: boolean = false) {
+    constructor(normalTexture: Texture, hoverTexture: Texture, pressedTexture: Texture, name: string, useHoverOverlay: boolean = false) {
         this.container = new Container();
+        this.name = name;
 
         this.normalState = new Sprite(normalTexture);
         this.hoverState = new Sprite(hoverTexture);
@@ -41,7 +43,7 @@ export class Button {
     }
 
     private async onPointerOver(): Promise<void> {
-        console.log('Button: onPointerOver');
+        console.log(`Button: onPointerOver - ${this.name}`);
         if (!this.isPressed) {
             this.normalState.visible = false;
             this.hoverState.visible = true;
@@ -53,7 +55,7 @@ export class Button {
     }
 
     private async onPointerOut(): Promise<void> {
-        console.log('Button: onPointerOut');
+        console.log(`Button: onPointerOut - ${this.name}`);
         if (!this.isPressed) {
             this.normalState.visible = true;
             this.hoverState.visible = false;
@@ -66,7 +68,7 @@ export class Button {
     }
 
     private onPointerDown(event: FederatedPointerEvent): void {
-        console.log('Button: onPointerDown');
+        console.log(`Button: onPointerDown - ${this.name}`);
         this.isPressed = true;
         this.hoverState.visible = false;
         this.pressedState.visible = true;
@@ -74,19 +76,19 @@ export class Button {
     }
 
     private onPointerUp(event: FederatedPointerEvent): void {
-        console.log('Button: onPointerUp');
+        console.log(`Button: onPointerUp - ${this.name}`);
         if (this.isPressed) {
             this.isPressed = false;
             this.pressedState.visible = false;
             this.hoverState.visible = true;
-            console.log('Button clicked');
-            this.container.emit('buttonClicked');
+            console.log(`Button clicked - ${this.name}`);
+            this.container.emit('buttonClicked', this.name);
             event.stopPropagation();
         }
     }
 
     private onPointerUpOutside(): void {
-        console.log('Button: onPointerUpOutside');
+        console.log(`Button: onPointerUpOutside - ${this.name}`);
         this.isPressed = false;
         this.normalState.visible = true;
         this.hoverState.visible = false;
@@ -107,5 +109,16 @@ export class Button {
         } else {
             this.container.on(event, listener);
         }
+    }
+
+    public logState(): void {
+        console.log(`Button ${this.name} state:`);
+        console.log(`  Position: (${this.container.x}, ${this.container.y})`);
+        console.log(`  Visible: ${this.container.visible}`);
+        console.log(`  Scale: (${this.container.scale.x}, ${this.container.scale.y})`);
+        console.log(`  Alpha: ${this.container.alpha}`);
+        console.log(`  Normal state visible: ${this.normalState.visible}`);
+        console.log(`  Hover state visible: ${this.hoverState.visible}`);
+        console.log(`  Pressed state visible: ${this.pressedState.visible}`);
     }
 }

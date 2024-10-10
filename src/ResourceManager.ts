@@ -98,8 +98,11 @@ export class ResourceManager {
     public async createTexture(type: string, name: string): Promise<Texture | null> {
         try {
             const path = this.getSpritePath(type, name);
+            console.log(`Attempting to load texture: ${type}/${name} from path: ${path}`);
             if (!path) return null;
-            return await Assets.load(path);
+            const texture = await Assets.load(path);
+            console.log(`Texture loaded successfully: ${type}/${name}`);
+            return texture;
         } catch (error) {
             console.error(`Error creating texture ${type}/${name}:`, error);
             return null;

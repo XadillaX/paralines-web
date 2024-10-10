@@ -12,9 +12,10 @@ export class TextButton extends Button {
         x: number,
         y: number,
         fontSize: number = 16,
-        fontColor: number = 0xFFFFFF
+        fontColor: number = 0xFFFFFF,
+        name: string = label
     ) {
-        super(normalTexture, hoverTexture, pressedTexture);
+        super(normalTexture, hoverTexture, pressedTexture, name);
 
         this.setPosition(x, y);
 

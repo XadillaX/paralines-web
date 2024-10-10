@@ -1,7 +1,8 @@
-import { Application, Ticker } from 'pixi.js';
+import { Application, Ticker, Container } from 'pixi.js';
 import { Scene } from './Scene';
 import { WelcomeScene } from './WelcomeScene';
 import { ResourceManager } from './ResourceManager';
+import { CustomCursor } from './CustomCursor';
 
 interface SaveData {
     stage: number;
@@ -12,7 +13,8 @@ export class Game {
     private app: Application;
     private currentScene: Scene | null = null;
     public readonly resourceManager: ResourceManager;
-    private saveData: SaveData = { stage: 1 }; // 设置为至少有一个关卡
+    private saveData: SaveData = { stage: 13 }; // 设置为至少有一个关卡
+    private customCursor: CustomCursor | null = null;
 
     private constructor() {
         this.app = new Application({
@@ -38,10 +40,25 @@ export class Game {
         this.resourceManager.setCurrentSet('media/loader/welcome.xml');
         
         document.body.appendChild(this.app.canvas);
-        this.setScene(new WelcomeScene());
-        
+
+        // Initialize custom cursor
+        this.customCursor = await CustomCursor.getInstance();
+        this.app.stage.addChild(this.customCursor);
+        this.customCursor.setArrowCursor();
+
+        // Add mouse move event listener
+        this.app.stage.eventMode = 'static';
+        this.app.stage.hitArea = this.app.screen;
+        this.app.stage.on('pointermove', (event) => {
+            if (this.customCursor) {
+                this.customCursor.updatePosition(event);
+            }
+        });
+
         // Hide system cursor
         this.app.renderer.events.cursorStyles.default = 'none';
+        
+        this.setScene(new WelcomeScene());
         
         this.app.ticker.add(this.update);
     }
@@ -54,12 +71,22 @@ export class Game {
     }
 
     public async setScene(scene: Scene): Promise<void> {
+        console.log('Setting new scene');
         if (this.currentScene) {
             this.app.stage.removeChild(this.currentScene.getContainer());
         }
         this.currentScene = scene;
         await this.currentScene.init();
         this.app.stage.addChild(scene.getContainer());
+        console.log('New scene added to stage');
+        console.log('Stage children count:', this.app.stage.children.length);
+
+        // Ensure custom cursor is always on top
+        if (this.customCursor) {
+            this.app.stage.addChild(this.customCursor);
+            // Reset mouse pointer to arrow state
+            this.customCursor.setArrowCursor();
+        }
     }
 
     public getApp(): Application {
@@ -72,5 +99,9 @@ export class Game {
 
     public setSaveData(data: SaveData): void {
         this.saveData = data;
+    }
+
+    public getCustomCursor(): CustomCursor | null {
+        return this.customCursor;
     }
 }

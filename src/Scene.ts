@@ -20,4 +20,9 @@ export abstract class Scene {
     protected addChild(child: Container): void {
         this.container.addChild(child);
     }
+
+    // 添加这个方法
+    protected removeChild(child: Container): void {
+        this.container.removeChild(child);
+    }
 }

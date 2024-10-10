@@ -34,26 +34,6 @@ export class WelcomeScene extends Scene {
         
         // Ensure the background container doesn't block event propagation
         this.backgroundContainer.eventMode = 'passive';
-        
-        // Initialize custom cursor
-        const customCursor = await CustomCursor.getInstance();
-        this.addChild(customCursor);
-        customCursor.setArrowCursor(); // Set default to arrow cursor
-        
-        // Add mouse move event listener
-        this.game.getApp().stage.eventMode = 'static';
-        this.game.getApp().stage.hitArea = this.game.getApp().screen;
-        this.game.getApp().stage.on('pointermove', (event) => {
-            customCursor.updatePosition(event);
-        });
-
-        // Ensure custom cursor is always on top
-        this.game.getApp().stage.on('added', () => {
-            this.game.getApp().stage.addChild(customCursor);
-        });
-
-        // Ensure system cursor is hidden
-        this.game.getApp().renderer.events.cursorStyles.default = 'none';
     }
 
     private async createSceneElements(): Promise<void> {
@@ -115,7 +95,7 @@ export class WelcomeScene extends Scene {
             const pressedTexture = await this.game.resourceManager.createTexture('GUI', `${data.name}2`);
 
             if (normalTexture && hoverTexture && pressedTexture) {
-                const button = new Button(normalTexture, hoverTexture, pressedTexture);
+                const button = new Button(normalTexture, hoverTexture, pressedTexture, data.label);
                 button.setPosition(50, data.y);
                 button.on('buttonClicked', () => {
                     console.log(`WelcomeScene: ${data.label} 按钮被点击`);
@@ -217,7 +197,8 @@ export class WelcomeScene extends Scene {
         const closeButton = new Button(
             await this.game.resourceManager.createTexture('CGBoard', 'close0'),
             await this.game.resourceManager.createTexture('CGBoard', 'close1'),
-            await this.game.resourceManager.createTexture('CGBoard', 'close2')
+            await this.game.resourceManager.createTexture('CGBoard', 'close2'),
+            'Close CG Board'
         );
         closeButton.setPosition(549 - 25, 6);
         closeButton.on('pointerup', this.closeCGBoard.bind(this));
@@ -228,7 +209,8 @@ export class WelcomeScene extends Scene {
             await this.game.resourceManager.createTexture('CGBoard', 'page1'),
             await this.game.resourceManager.createTexture('CGBoard', 'page2'),
             '上一页',
-            30, 40, 12, 0xFFFFFF
+            30, 40, 12, 0xFFFFFF,
+            'Previous Page'
         );
         prevButton.on('pointerup', () => this.changeCGPage(-1));
         board.addChild(prevButton.getContainer());
@@ -238,7 +220,8 @@ export class WelcomeScene extends Scene {
             await this.game.resourceManager.createTexture('CGBoard', 'page1'),
             await this.game.resourceManager.createTexture('CGBoard', 'page2'),
             '下一页',
-            549 - 30 - 104, 40, 12, 0xFFFFFF
+            549 - 30 - 104, 40, 12, 0xFFFFFF,
+            'Next Page'
         );
         nextButton.on('pointerup', () => this.changeCGPage(1));
         board.addChild(nextButton.getContainer());
@@ -284,6 +267,7 @@ export class WelcomeScene extends Scene {
                     await this.game.resourceManager.createTexture('CG', `btn${id}0`),
                     await this.game.resourceManager.createTexture('CG', `btn${id}1`),
                     await this.game.resourceManager.createTexture('CG', `btn${id}2`),
+                    `CG Button ${id + 1}`,
                     true // 使用悬停遮罩效果
                 );
                 button.setPosition(x, y);
@@ -316,7 +300,8 @@ export class WelcomeScene extends Scene {
         const closeButton = new Button(
             await this.game.resourceManager.createTexture('CGBoard', 'close0'),
             await this.game.resourceManager.createTexture('CGBoard', 'close1'),
-            await this.game.resourceManager.createTexture('CGBoard', 'close2')
+            await this.game.resourceManager.createTexture('CGBoard', 'close2'),
+            'Close CG Show Button'  // 添加按钮名称
         );
         closeButton.setPosition(800 - 30, 10);
         closeButton.on('pointerup', this.closeCGShow.bind(this));
