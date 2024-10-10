@@ -31,27 +31,27 @@ export class WelcomeScene extends Scene {
     public async init(): Promise<void> {
         await this.createSceneElements();
         
-        // 确保背景容器不会阻止事件传播
+        // Ensure the background container doesn't block event propagation
         this.backgroundContainer.eventMode = 'passive';
         
-        // 初始化自定义鼠标
+        // Initialize custom cursor
         const customCursor = await CustomCursor.getInstance();
         this.addChild(customCursor);
-        customCursor.setArrowCursor(); // 设置默认为箭头光标
+        customCursor.setArrowCursor(); // Set default to arrow cursor
         
-        // 添加鼠标移动事件监听
+        // Add mouse move event listener
         this.game.getApp().stage.eventMode = 'static';
         this.game.getApp().stage.hitArea = this.game.getApp().screen;
         this.game.getApp().stage.on('pointermove', (event) => {
             customCursor.updatePosition(event);
         });
 
-        // 确保自定义光标始终在最上层
+        // Ensure custom cursor is always on top
         this.game.getApp().stage.on('added', () => {
             this.game.getApp().stage.addChild(customCursor);
         });
 
-        // 确保系统鼠标被隐藏
+        // Ensure system cursor is hidden
         this.game.getApp().renderer.events.cursorStyles.default = 'none';
     }
 
@@ -120,14 +120,6 @@ export class WelcomeScene extends Scene {
                     console.log(`WelcomeScene: ${data.name} button clicked`);
                     this.onButtonClick(data.name);
                 });
-                button.on('pointerover', async () => {
-                    console.log(`WelcomeScene: ${data.name} button pointerover`);
-                    (await CustomCursor.getInstance()).setPointCursor();
-                });
-                button.on('pointerout', async () => {
-                    console.log(`WelcomeScene: ${data.name} button pointerout`);
-                    (await CustomCursor.getInstance()).setArrowCursor();
-                });
                 this.buttons.push(button);
                 this.backgroundContainer.addChild(button.getContainer() as any);
             } else {
@@ -142,7 +134,7 @@ export class WelcomeScene extends Scene {
         const playResult = this.bgm.play();
         
         if (playResult === undefined) {
-            console.log("音频自动播放被阻止。请点击页面任意位置来开始播放音乐。");
+            console.log("Audio autoplay blocked. Please click anywhere to start playing music.");
             document.addEventListener('click', () => {
                 this.bgm?.play();
                 if (this.audioPrompt) {
@@ -159,7 +151,7 @@ export class WelcomeScene extends Scene {
     }
 
     private createAudioPrompt(): void {
-        this.audioPrompt = new Text('点击任意位置开始播放音乐', {
+        this.audioPrompt = new Text('点击任意位置开始播放音乐', { // "Click anywhere to start playing music"
             fontFamily: 'Arial',
             fontSize: 24,
             fill: 0xffffff
@@ -176,32 +168,32 @@ export class WelcomeScene extends Scene {
 
         const particleTexture = await this.game.resourceManager.createTexture('Particle', 'Fire');
 
-        // 计算单个粒子的尺寸
+        // Calculate single particle size
         const frameWidth = particleTexture.width / 4;
         const frameHeight = particleTexture.height / 4;
 
-        // 创建一个新的纹理，只使用左上角的粒子
+        // Create a new texture using only the top-left particle
         const singleParticleTexture = new Texture({
             source: particleTexture.source,
             frame: new Rectangle(0, 0, frameWidth, frameHeight)
         });
 
-        // 加载 fire.json 文件
+        // Load fire.json file
         const fireConfigV1 = await Assets.load('media/particles/fire.json');
 
-        // 将 V1 配置升级到 V3，使用新创建的单个粒子纹理
+        // Upgrade V1 config to V3, using the newly created single particle texture
         const emitterConfig: EmitterConfigV3 = upgradeConfig(fireConfigV1, [singleParticleTexture]);
         this.fireEmitter = new Emitter(
             particleContainer,
             emitterConfig
         );
 
-        // 启动发射器
+        // Start the emitter
         this.fireEmitter.emit = true;
     }
 
     private async createCGBoard(): Promise<void> {
-        console.log('Creating CG Board'); // 添加日志
+        console.log('Creating CG Board');
         this.cgBoard = new Container();
         this.cgBoard.visible = false;
 
@@ -233,7 +225,7 @@ export class WelcomeScene extends Scene {
             await this.game.resourceManager.createTexture('CGBoard', 'page0'),
             await this.game.resourceManager.createTexture('CGBoard', 'page1'),
             await this.game.resourceManager.createTexture('CGBoard', 'page2'),
-            '上一',
+            '上一页', // "Previous Page"
             30, 40, 12, 0xFFFFFF
         );
         prevButton.on('pointerup', () => this.changeCGPage(-1));
@@ -243,7 +235,7 @@ export class WelcomeScene extends Scene {
             await this.game.resourceManager.createTexture('CGBoard', 'page0'),
             await this.game.resourceManager.createTexture('CGBoard', 'page1'),
             await this.game.resourceManager.createTexture('CGBoard', 'page2'),
-            '下一���',
+            '下一页', // "Next Page"
             549 - 30 - 104, 40, 12, 0xFFFFFF
         );
         nextButton.on('pointerup', () => this.changeCGPage(1));
@@ -265,19 +257,19 @@ export class WelcomeScene extends Scene {
 
         this.addChild(this.cgBoard);
         this.addChild(this.cgShowContainer);
-        console.log('CG Board created and added to scene'); // 添加日志
+        console.log('CG Board created and added to scene');
     }
 
     private async createCGButtons(board: Sprite): Promise<void> {
         const startx = 15;
         const starty = 80;
-        const cgCount = 19; // 根据实际CG量调整
+        const cgCount = 19; // Adjust according to actual CG quantity
 
         for (let i = 0; i < 2; i++) {
             const page = new Container();
             page.visible = i === 0;
             board.addChild(page);
-            this.cgPages.push(page); // 将页面添加到数组中
+            this.cgPages.push(page); // Add page to array
 
             for (let j = 0; j < 12 && i * 12 + j < cgCount; j++) {
                 const row = Math.floor(j / 4);
@@ -300,7 +292,7 @@ export class WelcomeScene extends Scene {
     }
 
     private async createCGShowImages(): Promise<void> {
-        const cgCount = 19; // 根据实际CG数量调整
+        const cgCount = 19; // Adjust according to actual CG quantity
         this.cgShowContainer = new Container();
         this.cgShowContainer.visible = false;
         this.addChild(this.cgShowContainer);
@@ -311,13 +303,13 @@ export class WelcomeScene extends Scene {
                 cg.position.set((800 - cg.width) / 2, (600 - cg.height) / 2);
                 cg.visible = false;
                 this.cgShowContainer.addChild(cg);
-                console.log(`CG${i} loaded and added to container`); // 添加日志
+                console.log(`CG${i} loaded and added to container`);
             } else {
                 console.error(`Failed to create CG sprite: CG${i}`);
             }
         }
 
-        // 添加关闭按钮
+        // Add close button
         const closeButton = new Button(
             await this.game.resourceManager.createTexture('CGBoard', 'close0'),
             await this.game.resourceManager.createTexture('CGBoard', 'close1'),
@@ -329,13 +321,13 @@ export class WelcomeScene extends Scene {
     }
 
     private showCGBoard(): void {
-        console.log('showCGBoard called'); // 添加日志
+        console.log('showCGBoard called');
         if (this.cgBoard) {
-            console.log('Setting cgBoard visible to true'); // 添加日志
+            console.log('Setting cgBoard visible to true');
             this.cgBoard.visible = true;
             this.backgroundContainer.eventMode = 'none';
         } else {
-            console.error('cgBoard is null'); // 添加错误日志
+            console.error('cgBoard is null');
         }
     }
 
@@ -362,16 +354,16 @@ export class WelcomeScene extends Scene {
 
     private showCG(id: number): void {
         if (this.cgShowContainer && this.cgBoard && this.cgBlackBackground) {
-            // 显示黑色背景
+            // Show black background
             this.cgBlackBackground.visible = true;
 
-            // 显示CG展示容器
+            // Show CG display container
             this.cgShowContainer.visible = true;
             
-            // 隐藏CG画廊界面
+            // Hide CG gallery interface
             this.cgBoard.visible = false;
 
-            // 显示选的CG
+            // Show selected CG
             this.cgShowContainer.children.forEach((child, index) => {
                 if (child instanceof Sprite) {
                     const isVisible = index === id;
@@ -387,23 +379,23 @@ export class WelcomeScene extends Scene {
     }
 
     private onButtonClick(buttonName: string): void {
-        console.log(`onButtonClick called with: ${buttonName}`); // 添加日志
+        console.log(`onButtonClick called with: ${buttonName}`);
         switch (buttonName) {
             case 'Start':
                 console.log('Start game');
-                // 实现开始游戏逻辑
+                // Implement start game logic
                 break;
             case 'CG':
-                console.log('Show CG Board'); // 添加日志
+                console.log('Show CG Board');
                 this.showCGBoard();
                 break;
             case 'Settings':
                 console.log('Open settings');
-                // 实现设置逻辑
+                // Implement settings logic
                 break;
             case 'Exit':
                 console.log('Exit game');
-                // 实现退出游戏逻辑
+                // Implement exit game logic
                 break;
         }
     }
@@ -412,7 +404,7 @@ export class WelcomeScene extends Scene {
         if (this.fireEmitter) {
             this.fireEmitter.update(deltaTime * 0.001);
         }
-        // 以在这里添加其他需要更新的逻辑
+        // Add other update logic here if needed
     }
 
     private closeCGShow(): void {

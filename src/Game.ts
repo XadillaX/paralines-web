@@ -33,7 +33,7 @@ export class Game {
         document.body.appendChild(this.app.canvas);
         this.setScene(new WelcomeScene());
         
-        // 隐藏系统鼠标
+        // Hide system cursor
         this.app.renderer.events.cursorStyles.default = 'none';
         
         this.app.ticker.add(this.update);

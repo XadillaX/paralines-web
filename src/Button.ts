@@ -1,4 +1,5 @@
 import { Container, Sprite, Texture, FederatedPointerEvent } from 'pixi.js';
+import { CustomCursor } from './CustomCursor';
 
 export class Button {
     private container: Container;
@@ -29,21 +30,23 @@ export class Button {
         this.container.on('pointerupoutside', this.onPointerUpOutside.bind(this));
     }
 
-    private onPointerOver(): void {
+    private async onPointerOver(): Promise<void> {
         console.log('Button: onPointerOver');
         if (!this.isPressed) {
             this.normalState.visible = false;
             this.hoverState.visible = true;
         }
+        (await CustomCursor.getInstance()).setPointCursor();
     }
 
-    private onPointerOut(): void {
+    private async onPointerOut(): Promise<void> {
         console.log('Button: onPointerOut');
         if (!this.isPressed) {
             this.normalState.visible = true;
             this.hoverState.visible = false;
             this.pressedState.visible = false;
         }
+        (await CustomCursor.getInstance()).setArrowCursor();
     }
 
     private onPointerDown(event: FederatedPointerEvent): void {
