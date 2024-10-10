@@ -6,6 +6,7 @@ import { Button } from './Button';
 import { Emitter, EmitterConfigV3, upgradeConfig } from '@barvynkoa/particle-emitter';
 import { TextButton } from './TextButton';
 import { CustomCursor } from './CustomCursor';
+import { LoginScene } from './LoginScene';
 
 export class WelcomeScene extends Scene {
     private background: Sprite | null = null;
@@ -102,10 +103,10 @@ export class WelcomeScene extends Scene {
 
     private async createButtons(): Promise<void> {
         const buttonData = [
-            { name: 'Start', y: 320 },
-            { name: 'CG', y: 365 },
-            { name: 'Settings', y: 410 },
-            { name: 'Exit', y: 455 }
+            { name: 'Start', y: 320, label: '开始游戏' },
+            { name: 'CG', y: 365, label: 'CG鉴赏' },
+            { name: 'Settings', y: 410, label: '设置' },
+            { name: 'Exit', y: 455, label: '退出' }
         ];
 
         for (const data of buttonData) {
@@ -117,13 +118,13 @@ export class WelcomeScene extends Scene {
                 const button = new Button(normalTexture, hoverTexture, pressedTexture);
                 button.setPosition(50, data.y);
                 button.on('buttonClicked', () => {
-                    console.log(`WelcomeScene: ${data.name} button clicked`);
+                    console.log(`WelcomeScene: ${data.label} 按钮被点击`);
                     this.onButtonClick(data.name);
                 });
                 this.buttons.push(button);
                 this.backgroundContainer.addChild(button.getContainer() as any);
             } else {
-                console.error(`Failed to load textures for button: ${data.name}`);
+                console.error(`加载按钮纹理失败: ${data.name}`);
             }
         }
     }
@@ -134,24 +135,18 @@ export class WelcomeScene extends Scene {
         const playResult = this.bgm.play();
         
         if (playResult === undefined) {
-            console.log("Audio autoplay blocked. Please click anywhere to start playing music.");
+            console.log("音频自动播放被阻止。请点击页面任意位置来开始播放音乐。");
             document.addEventListener('click', () => {
                 this.bgm?.play();
-                if (this.audioPrompt) {
-                    this.container.removeChild(this.audioPrompt);
-                    this.audioPrompt = null;
-                }
+                this.removeAudioPrompt();
             }, { once: true });
         } else {
-            if (this.audioPrompt) {
-                this.container.removeChild(this.audioPrompt);
-                this.audioPrompt = null;
-            }
+            this.removeAudioPrompt();
         }
     }
 
     private createAudioPrompt(): void {
-        this.audioPrompt = new Text('点击任意位置开始播放音乐', { // "Click anywhere to start playing music"
+        this.audioPrompt = new Text('点击任意位置开始播放音乐', {
             fontFamily: 'Arial',
             fontSize: 24,
             fill: 0xffffff
@@ -159,6 +154,13 @@ export class WelcomeScene extends Scene {
         this.audioPrompt.position.set(this.game.getApp().screen.width / 2, this.game.getApp().screen.height - 50);
         this.audioPrompt.anchor.set(0.5);
         this.container.addChild(this.audioPrompt as Container);
+    }
+
+    private removeAudioPrompt(): void {
+        if (this.audioPrompt && this.audioPrompt.parent) {
+            this.audioPrompt.parent.removeChild(this.audioPrompt);
+            this.audioPrompt = null;
+        }
     }
 
     private async createFireParticles(): Promise<void> {
@@ -225,7 +227,7 @@ export class WelcomeScene extends Scene {
             await this.game.resourceManager.createTexture('CGBoard', 'page0'),
             await this.game.resourceManager.createTexture('CGBoard', 'page1'),
             await this.game.resourceManager.createTexture('CGBoard', 'page2'),
-            '上一页', // "Previous Page"
+            '上一页',
             30, 40, 12, 0xFFFFFF
         );
         prevButton.on('pointerup', () => this.changeCGPage(-1));
@@ -235,7 +237,7 @@ export class WelcomeScene extends Scene {
             await this.game.resourceManager.createTexture('CGBoard', 'page0'),
             await this.game.resourceManager.createTexture('CGBoard', 'page1'),
             await this.game.resourceManager.createTexture('CGBoard', 'page2'),
-            '下一页', // "Next Page"
+            '下一页',
             549 - 30 - 104, 40, 12, 0xFFFFFF
         );
         nextButton.on('pointerup', () => this.changeCGPage(1));
@@ -380,24 +382,62 @@ export class WelcomeScene extends Scene {
     }
 
     private onButtonClick(buttonName: string): void {
-        console.log(`onButtonClick called with: ${buttonName}`);
+        console.log(`按钮点击: ${buttonName}`);
         switch (buttonName) {
             case 'Start':
-                console.log('Start game');
-                // Implement start game logic
+                console.log('开始游戏');
+                this.startGame();
                 break;
             case 'CG':
-                console.log('Show CG Board');
+                console.log('显示CG画廊');
                 this.showCGBoard();
                 break;
             case 'Settings':
-                console.log('Open settings');
+                console.log('打开设置');
                 // Implement settings logic
                 break;
             case 'Exit':
-                console.log('Exit game');
-                // Implement exit game logic
+                console.log('退出游戏');
+                this.exitGame();
                 break;
+        }
+    }
+
+    private startGame(): void {
+        // Stop BGM
+        if (this.bgm) {
+            this.bgm.stop();
+        }
+
+        // Hide welcome scene elements
+        this.backgroundContainer.visible = false;
+        this.buttons.forEach(button => button.getContainer().visible = false);
+        if (this.logo) {
+            this.logo.visible = false;
+        }
+
+        // Stop fire particle effect
+        if (this.fireEmitter) {
+            this.fireEmitter.emit = false;
+        }
+
+        // Remove audio prompt (if it still exists)
+        this.removeAudioPrompt();
+
+        // Switch to LoginScene
+        const loginScene = new LoginScene();
+        this.game.setScene(loginScene);
+    }
+
+    private exitGame(): void {
+        // In a web environment, we can't directly exit the game
+        // Instead, we can show a confirmation dialog
+        if (confirm("确定要退出游戏吗？")) {
+            // Close the window or redirect to a different page
+            window.close();
+            // If window.close() doesn't work (it often doesn't in modern browsers),
+            // you could redirect to a "game over" or "thank you for playing" page
+            // window.location.href = "exit.html";
         }
     }
 

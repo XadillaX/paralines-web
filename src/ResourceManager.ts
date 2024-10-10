@@ -1,57 +1,73 @@
 import { Assets, Texture, Sprite } from 'pixi.js';
 import { Sound } from '@pixi/sound';
 
-interface ResourceData {
-    [key: string]: {
-        [key: string]: string;
+interface ResourceSet {
+    [type: string]: {
+        [name: string]: string;
     };
 }
 
 export class ResourceManager {
-    private resources: ResourceData = {};
+    private resources: { [xmlPath: string]: ResourceSet } = {};
+    private currentSet: string | null = null;
 
     public async loadXML(xmlPath: string): Promise<void> {
+        if (this.resources[xmlPath]) {
+            console.log(`Resource set ${xmlPath} already loaded.`);
+            return;
+        }
+
         try {
             const xmlText = await Assets.load(xmlPath);
-            console.log("XML loaded:", xmlText);
+            console.log(`XML loaded: ${xmlPath}`);
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlText, "text/xml");
 
-            this.parseInformationNodes(xmlDoc, "SpriteInformation");
-            this.parseInformationNodes(xmlDoc, "SoundInformation");
+            this.resources[xmlPath] = {};
+            this.parseInformationNodes(xmlDoc, "SpriteInformation", xmlPath);
+            this.parseInformationNodes(xmlDoc, "SoundInformation", xmlPath);
 
-            console.log("All resources loaded:", this.resources);
+            console.log("Resources loaded from XML:", xmlPath);
         } catch (error) {
-            console.error("Error loading XML:", error);
+            console.error(`Error loading XML: ${xmlPath}`, error);
         }
     }
 
-    private parseInformationNodes(xmlDoc: Document, nodeName: string): void {
+    public setCurrentSet(xmlPath: string): void {
+        if (!this.resources[xmlPath]) {
+            console.error(`Resource set ${xmlPath} not loaded.`);
+            return;
+        }
+        this.currentSet = xmlPath;
+        console.log(`Current resource set set to: ${xmlPath}`);
+    }
+
+    private parseInformationNodes(xmlDoc: Document, nodeName: string, xmlPath: string): void {
         const nodes = xmlDoc.getElementsByTagName(nodeName);
         for (let i = 0; i < nodes.length; i++) {
             const type = nodes[i].getAttribute("type") || "";
             const elements = nodes[i].children;
-            if (!this.resources[type]) {
-                this.resources[type] = {};
+            if (!this.resources[xmlPath][type]) {
+                this.resources[xmlPath][type] = {};
             }
             for (let j = 0; j < elements.length; j++) {
                 const name = elements[j].getAttribute("name") || "";
                 const path = elements[j].textContent || "";
-                if (!this.resources[type][name]) {
-                    this.resources[type][name] = path;
-                    console.log(`Loaded resource: ${type}/${name} -> ${path}`);
-                } else {
-                    console.warn(`Resource ${type}/${name} already exists, skipping.`);
-                }
+                this.resources[xmlPath][type][name] = path;
+                console.log(`Loaded resource: ${xmlPath} -> ${type}/${name} -> ${path}`);
             }
         }
     }
 
-    public getSpritePath(type: string, name: string): string {
-        const path = this.resources[type]?.[name] || "";
+    private getSpritePath(type: string, name: string): string {
+        if (!this.currentSet) {
+            console.error("No resource set currently active.");
+            return "";
+        }
+        const path = this.resources[this.currentSet][type]?.[name] || "";
         if (!path) {
-            console.error(`Resource not found: ${type}/${name}`);
-            console.log("Available resources:", this.resources);
+            console.error(`Resource not found: ${this.currentSet} -> ${type}/${name}`);
+            console.log("Available resources:", this.resources[this.currentSet]);
         }
         return path;
     }
@@ -59,15 +75,8 @@ export class ResourceManager {
     public async createSprite(type: string, name: string): Promise<Sprite | null> {
         try {
             const path = this.getSpritePath(type, name);
-            if (!path) {
-                console.error(`Resource not found: ${type}/${name}`);
-                return null;
-            }
+            if (!path) return null;
             const texture = await Assets.load(path);
-            if (!texture) {
-                console.error(`Failed to load texture: ${path}`);
-                return null;
-            }
             return new Sprite(texture);
         } catch (error) {
             console.error(`Error creating sprite ${type}/${name}:`, error);
@@ -78,10 +87,7 @@ export class ResourceManager {
     public async createSound(type: string, name: string): Promise<Sound | null> {
         try {
             const path = this.getSpritePath(type, name);
-            if (!path) {
-                console.error(`Resource not found: ${type}/${name}`);
-                return null;
-            }
+            if (!path) return null;
             return Sound.from(path);
         } catch (error) {
             console.error(`Error creating sound ${type}/${name}:`, error);
@@ -92,10 +98,7 @@ export class ResourceManager {
     public async createTexture(type: string, name: string): Promise<Texture | null> {
         try {
             const path = this.getSpritePath(type, name);
-            if (!path) {
-                console.error(`Resource not found: ${type}/${name}`);
-                return null;
-            }
+            if (!path) return null;
             return await Assets.load(path);
         } catch (error) {
             console.error(`Error creating texture ${type}/${name}:`, error);

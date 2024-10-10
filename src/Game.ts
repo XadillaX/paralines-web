@@ -3,11 +3,16 @@ import { Scene } from './Scene';
 import { WelcomeScene } from './WelcomeScene';
 import { ResourceManager } from './ResourceManager';
 
+interface SaveData {
+    stage: number;
+}
+
 export class Game {
     private static instance: Game;
     private app: Application;
     private currentScene: Scene | null = null;
     public readonly resourceManager: ResourceManager;
+    private saveData: SaveData = { stage: 1 }; // 设置为至少有一个关卡
 
     private constructor() {
         this.app = new Application({
@@ -29,6 +34,8 @@ export class Game {
     public async start(): Promise<void> {
         await this.app.init();
         await this.resourceManager.loadXML('media/loader/welcome.xml');
+        await this.resourceManager.loadXML('media/loader/login.xml');
+        this.resourceManager.setCurrentSet('media/loader/welcome.xml');
         
         document.body.appendChild(this.app.canvas);
         this.setScene(new WelcomeScene());
@@ -57,5 +64,13 @@ export class Game {
 
     public getApp(): Application {
         return this.app;
+    }
+
+    public getSaveData(): SaveData {
+        return this.saveData;
+    }
+
+    public setSaveData(data: SaveData): void {
+        this.saveData = data;
     }
 }
