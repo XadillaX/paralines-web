@@ -46,6 +46,11 @@ export class WelcomeScene extends Scene {
             customCursor.updatePosition(event);
         });
 
+        // 确保自定义光标始终在最上层
+        this.game.getApp().stage.on('added', () => {
+            this.game.getApp().stage.addChild(customCursor);
+        });
+
         // 确保系统鼠标被隐藏
         this.game.getApp().renderer.events.cursorStyles.default = 'none';
     }
@@ -238,7 +243,7 @@ export class WelcomeScene extends Scene {
             await this.game.resourceManager.createTexture('CGBoard', 'page0'),
             await this.game.resourceManager.createTexture('CGBoard', 'page1'),
             await this.game.resourceManager.createTexture('CGBoard', 'page2'),
-            '下一页',
+            '下一���',
             549 - 30 - 104, 40, 12, 0xFFFFFF
         );
         nextButton.on('pointerup', () => this.changeCGPage(1));

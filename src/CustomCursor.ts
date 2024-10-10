@@ -19,6 +19,11 @@ export class CustomCursor extends Container {
         // 设置光标的锚点为左上角
         this.arrowCursor.anchor.set(0, 0);
         this.pointCursor.anchor.set(0, 0);
+
+        // 设置鼠标光标不接收交互事件
+        this.eventMode = 'none';
+        this.arrowCursor.eventMode = 'none';
+        this.pointCursor.eventMode = 'none';
     }
 
     public static async getInstance(): Promise<CustomCursor> {
